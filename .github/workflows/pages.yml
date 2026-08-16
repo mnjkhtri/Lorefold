@@ -39,6 +39,9 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
       - name: Generate automatic LKML catalog
+        env:
+          LOREFOLD_MAX_LISTS: "6"
+          LOREFOLD_MAX_THREADS_PER_LIST: "1"
         run: npm run data:generate
       - name: Test Pages-base production artifact
         env:
