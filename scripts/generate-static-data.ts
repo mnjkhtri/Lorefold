@@ -14,7 +14,7 @@ import { parseThread } from "../src/parsing/thread-parser";
 const USER_AGENT = "Lorefold static reader/0.1 (https://github.com/mnjkhtri/Lorefold)";
 const MANIFEST_URL = "https://lore.kernel.org/manifest.js.gz";
 const MAX_ACTIVE_LISTS = Number(process.env.LOREFOLD_MAX_LISTS ?? "8");
-const MAX_MESSAGES = Number(process.env.LOREFOLD_MAX_MESSAGES ?? "1000");
+const MAX_MESSAGES = Number(process.env.LOREFOLD_MAX_MESSAGES ?? "10000");
 const MAX_MESSAGES_PER_THREAD = Number(process.env.LOREFOLD_MAX_MESSAGES_PER_THREAD ?? "250");
 const MAX_RAW_MESSAGE_BYTES = 4 * 1024 * 1024;
 const FETCH_CONCURRENCY = 2;
@@ -240,6 +240,7 @@ for (const [rootId, group] of grouped) {
       id: key,
       canonicalUrl,
       channels,
+      coverage: { kind: "bounded-window", maxMessages: MAX_MESSAGES },
       thread,
     };
     summaries.push({

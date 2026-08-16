@@ -35,5 +35,9 @@ export interface GeneratedThreadDocument {
   id: string;
   canonicalUrl: string;
   channels: string[];
+  coverage?: {
+    kind: "bounded-window";
+    maxMessages: number;
+  };
   thread: Thread;
 }

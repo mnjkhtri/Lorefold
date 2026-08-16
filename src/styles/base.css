@@ -318,6 +318,13 @@
     overflow-wrap: anywhere;
   }
   .message-metadata dt { color: var(--color-text-muted); }
+  .thread-coverage {
+    margin: 0.55rem 0 0;
+    color: var(--color-text-muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.68rem;
+  }
+  .thread-coverage a { color: var(--color-accent-strong); }
   .thread-overview {
     margin-block: 0.85rem;
     padding: 0.2rem 0 0.2rem 0.8rem;

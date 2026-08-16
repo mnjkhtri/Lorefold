@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 
 import type { GeneratedThreadDocument } from "../models/static-data";
 import type { Thread } from "../models/thread";
-import { safeLoreMessageHref } from "../security/safe-links";
+import { safeLoreMessageHref, safeLoreThreadHref } from "../security/safe-links";
 import { PatchView } from "./PatchView";
 import { RichContentBlocks } from "./RichContentBlocks";
 import { ThreadOverview } from "./ThreadOverview";
@@ -47,6 +47,9 @@ export function ThreadPage() {
               patchCount={Object.keys(thread.patches ?? {}).length}
             />
           )}
+          <p className="thread-coverage" role="note">
+            recent sync window · older messages may not be included · <a href={safeLoreThreadHref(document?.canonicalUrl ?? "") ?? "https://lore.kernel.org/"} rel="noopener noreferrer">open complete thread on lore</a>
+          </p>
           <ThreadOverview
             messages={Object.fromEntries(Object.values(thread.messages).map((message) => [message.id, {
               id: message.id,
