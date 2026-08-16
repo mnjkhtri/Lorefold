@@ -1,7 +1,7 @@
-import { gunzipSync } from "node:zlib";
 import { mkdir, writeFile } from "node:fs/promises";
 
 import { DEFAULT_PARSER_LIMITS } from "../src/parsing/limits";
+import { decodeBounded } from "../src/parsing/compression";
 import { splitMbox } from "../src/parsing/mbox";
 import { parseThread } from "../src/parsing/thread-parser";
 import type { RawMessageRecord } from "../src/models/thread";
@@ -119,7 +119,11 @@ for (const list of lists) {
     let records: RawMessageRecord[];
     try {
       const compressed = await fetchBytes(`${canonicalUrl}/t.mbox.gz`);
-      records = splitMbox(new Uint8Array(gunzipSync(compressed)));
+      const decoded = await decodeBounded(compressed, {
+        maxCompressedBytes: MAX_COMPRESSED_THREAD_BYTES,
+        maxDecompressedBytes: 32 * 1024 * 1024,
+      });
+      records = splitMbox(decoded);
       if (records.length > MAX_GENERATED_RECORDS) throw new Error(`thread contains ${records.length} messages`);
     } catch (reason: unknown) {
       warnings.push(`${list.id}: thread skipped (${reason instanceof Error ? reason.message : "unavailable"})`);
