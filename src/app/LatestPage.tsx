@@ -112,7 +112,7 @@ export function filteredThreads(catalog: GeneratedCatalog, query: string, filter
 
 export function LatestPage() {
   const navigate = useNavigate();
-  const { catalog, error, newCatalog, applyNewCatalog } = useCatalog();
+  const { catalog, error, newCatalog, refreshing, applyNewCatalog } = useCatalog();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all");
   const [selectedChannel, setSelectedChannel] = useState("all");
@@ -126,7 +126,7 @@ export function LatestPage() {
           <p className="eyebrow">kernel development, in motion</p>
           <h1 id="latest-title">latest activity</h1>
         </div>
-        {activeCatalog !== undefined && <SyncStatus catalog={activeCatalog} />}
+        {activeCatalog !== undefined && <SyncStatus catalog={activeCatalog} refreshing={refreshing} />}
       </div>
       {newCatalog !== undefined && (
         <button className="new-activity" type="button" onClick={applyNewCatalog}>new activity available · show it</button>
@@ -173,6 +173,6 @@ export function LatestPage() {
   );
 }
 
-export function SyncStatus({ catalog }: { catalog: GeneratedCatalog }) {
-  return <p className="sync-status"><span className="sync-dot" aria-hidden="true" />synced {relativeTime(catalog.generatedAt)}</p>;
+export function SyncStatus({ catalog, refreshing = false }: { catalog: GeneratedCatalog; refreshing?: boolean }) {
+  return <p className={`sync-status${refreshing ? " is-refreshing" : ""}`} role="status"><span className="sync-dot" aria-hidden="true" />{refreshing ? "checking for latest activity…" : `synced ${relativeTime(catalog.generatedAt)}`}</p>;
 }

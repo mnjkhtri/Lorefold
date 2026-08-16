@@ -41,8 +41,8 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Generate automatic LKML catalog
         env:
-          LOREFOLD_MAX_LISTS: "3"
-          LOREFOLD_MAX_THREADS_PER_LIST: "1"
+          LOREFOLD_MAX_LISTS: "8"
+          LOREFOLD_MAX_THREADS_PER_LIST: "4"
         run: timeout --signal=TERM 120s npm run data:generate || echo "::warning::upstream catalog sync timed out; deploying the last valid catalog"
       - name: Test Pages-base production artifact
         if: github.event_name != 'schedule'

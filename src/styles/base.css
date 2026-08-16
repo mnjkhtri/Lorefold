@@ -153,6 +153,16 @@
     background: #2d9d62;
   }
 
+  .sync-status.is-refreshing .sync-dot {
+    background: var(--color-focus);
+    animation: sync-pulse 1s ease-in-out infinite;
+  }
+
+  @keyframes sync-pulse {
+    0%, 100% { opacity: 0.35; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.15); }
+  }
+
   .channel-nav {
     display: flex;
     flex-wrap: wrap;

@@ -4,13 +4,14 @@ import { DEFAULT_PARSER_LIMITS } from "../src/parsing/limits";
 import { decodeBounded } from "../src/parsing/compression";
 import { splitMbox } from "../src/parsing/mbox";
 import { parseThread } from "../src/parsing/thread-parser";
-import type { RawMessageRecord } from "../src/models/thread";
 
 const USER_AGENT = "Lorefold static catalog/0.1 (https://github.com/mnjkhtri/Lorefold)";
 const MAX_LISTS = Number(process.env.LOREFOLD_MAX_LISTS ?? "12");
 const MAX_THREADS_PER_LIST = Number(process.env.LOREFOLD_MAX_THREADS_PER_LIST ?? "2");
 const MAX_COMPRESSED_THREAD_BYTES = 1 * 1024 * 1024;
 const MAX_GENERATED_RECORDS = Number(process.env.LOREFOLD_MAX_GENERATED_RECORDS ?? "250");
+const MAX_GENERATED_MESSAGES = Number(process.env.LOREFOLD_MAX_GENERATED_MESSAGES ?? "1000");
+const FETCH_CONCURRENCY = 4;
 
 interface GeneratedThread {
   id: string;
@@ -73,6 +74,21 @@ async function fetchBytes(url: string): Promise<Uint8Array> {
   return bytes;
 }
 
+async function mapWithConcurrency<T, R>(values: T[], limit: number, mapper: (value: T) => Promise<R>): Promise<R[]> {
+  const results = new Array<R>(values.length);
+  let nextIndex = 0;
+  const worker = async (): Promise<void> => {
+    while (nextIndex < values.length) {
+      const index = nextIndex;
+      nextIndex += 1;
+      const value = values[index];
+      if (value !== undefined) results[index] = await mapper(value);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(limit, values.length) }, () => worker()));
+  return results;
+}
+
 function entries(feed: string): Array<{ url: string; subject: string; updatedAt: string }> {
   return [...feed.matchAll(/<entry\b[\s\S]*?<\/entry>/gu)].flatMap((match) => {
     const entry = match[0];
@@ -104,33 +120,49 @@ const threads: GeneratedThread[] = [];
 const threadByUrl = new Map<string, GeneratedThread>();
 const threadById = new Map<string, GeneratedThread>();
 const warnings: string[] = [];
-for (const list of lists) {
-  const feed = new TextDecoder().decode(await fetchBytes(`https://lore.kernel.org/${encodeURIComponent(list.id)}/new.atom`));
-  const seen = new Set<string>();
-  for (const entry of entries(feed)) {
-    if (threads.filter((item) => item.channels.includes(list.id)).length >= MAX_THREADS_PER_LIST) break;
-    const canonicalUrl = entry.url.replace(/\/$/u, "");
-    if (seen.has(canonicalUrl)) continue;
-    seen.add(canonicalUrl);
-    const existing = threadByUrl.get(canonicalUrl);
-    if (existing !== undefined) {
-      existing.channels.push(list.id);
-      continue;
-    }
-    let records: RawMessageRecord[];
-    try {
-      const compressed = await fetchBytes(`${canonicalUrl}/t.mbox.gz`);
-      const decoded = await decodeBounded(compressed, {
-        maxCompressedBytes: MAX_COMPRESSED_THREAD_BYTES,
-        maxDecompressedBytes: 32 * 1024 * 1024,
-      });
-      records = splitMbox(decoded);
-      if (records.length > MAX_GENERATED_RECORDS) throw new Error(`thread contains ${records.length} messages`);
-    } catch (reason: unknown) {
-      warnings.push(`${list.id}: thread skipped (${reason instanceof Error ? reason.message : "unavailable"})`);
-      continue;
-    }
-    if (records.length === 0) continue;
+let generatedMessageCount = 0;
+const listEntries = await mapWithConcurrency(lists, FETCH_CONCURRENCY, async (list) => {
+  try {
+    const feed = new TextDecoder().decode(await fetchBytes(`https://lore.kernel.org/${encodeURIComponent(list.id)}/new.atom`));
+    const seen = new Set<string>();
+    return entries(feed).filter((entry) => {
+      const canonicalUrl = entry.url.replace(/\/$/u, "");
+      if (seen.has(canonicalUrl)) return false;
+      seen.add(canonicalUrl);
+      return true;
+    }).slice(0, MAX_THREADS_PER_LIST).map((entry) => ({ list, entry }));
+  } catch (reason: unknown) {
+    warnings.push(`${list.id}: feed unavailable (${reason instanceof Error ? reason.message : "unavailable"})`);
+    return [];
+  }
+});
+
+const fetchedThreads = await mapWithConcurrency(listEntries.flat(), FETCH_CONCURRENCY, async ({ list, entry }) => {
+  const canonicalUrl = entry.url.replace(/\/$/u, "");
+  try {
+    const compressed = await fetchBytes(`${canonicalUrl}/t.mbox.gz`);
+    const decoded = await decodeBounded(compressed, {
+      maxCompressedBytes: MAX_COMPRESSED_THREAD_BYTES,
+      maxDecompressedBytes: 32 * 1024 * 1024,
+    });
+    const records = splitMbox(decoded);
+    if (records.length > MAX_GENERATED_RECORDS) throw new Error(`thread contains ${records.length} messages`);
+    return { list, entry, canonicalUrl, records };
+  } catch (reason: unknown) {
+    warnings.push(`${list.id}: thread skipped (${reason instanceof Error ? reason.message : "unavailable"})`);
+    return undefined;
+  }
+});
+
+for (const fetched of fetchedThreads) {
+  if (fetched === undefined || fetched.records.length === 0) continue;
+  const { list, entry, canonicalUrl, records } = fetched;
+  if (generatedMessageCount + records.length > MAX_GENERATED_MESSAGES) continue;
+  const existing = threadByUrl.get(canonicalUrl);
+  if (existing !== undefined) {
+    if (!existing.channels.includes(list.id)) existing.channels.push(list.id);
+    continue;
+  }
     const thread = await parseThread({
       request: {
         source: {
@@ -145,7 +177,7 @@ for (const list of lists) {
     const subject = entry.subject || thread.subject;
     const existingThread = threadById.get(thread.id);
     if (existingThread !== undefined) {
-      existingThread.channels.push(list.id);
+      if (!existingThread.channels.includes(list.id)) existingThread.channels.push(list.id);
       threadByUrl.set(canonicalUrl, existingThread);
       continue;
     }
@@ -167,9 +199,9 @@ for (const list of lists) {
       rawRecords: records.map((record) => Buffer.from(record.bytes).toString("base64")),
     };
     threads.push(generated);
+    generatedMessageCount += records.length;
     threadByUrl.set(canonicalUrl, generated);
     threadById.set(thread.id, generated);
-  }
 }
 
 if (threads.length === 0) throw new Error("no static threads were generated");
