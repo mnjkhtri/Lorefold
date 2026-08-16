@@ -428,6 +428,15 @@
     font-size: 0.76rem;
   }
 
+  .activity-table th:nth-child(3),
+  .activity-table td:nth-child(3),
+  .activity-table th:nth-child(4),
+  .activity-table td:nth-child(4),
+  .activity-table th:nth-child(5),
+  .activity-table td:nth-child(5) {
+    white-space: nowrap;
+  }
+
   .activity-table td small {
     display: block;
     margin-top: 0.15rem;
@@ -1079,6 +1088,69 @@
     letter-spacing: -0.04em;
   }
 
+  .thread-title-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-4);
+    border-bottom: 1px solid var(--color-border);
+    padding-block: var(--space-3) var(--space-4);
+  }
+
+  .thread-title-row h1 {
+    min-width: 0;
+    margin: 0;
+    max-width: 64rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: clamp(1.25rem, 2.4vw, 1.85rem);
+    line-height: 1.25;
+    letter-spacing: -0.04em;
+    overflow-wrap: anywhere;
+  }
+
+  .thread-type {
+    flex: 0 0 auto;
+    padding-top: 0.25rem;
+    color: var(--color-accent-strong);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .thread-facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+    gap: 0.45rem 1.4rem;
+    margin: 0;
+    border-bottom: 1px solid var(--color-border);
+    padding: 0.8rem 0;
+  }
+
+  .thread-facts div {
+    display: grid;
+    grid-template-columns: 4.7rem minmax(0, 1fr);
+    gap: 0.6rem;
+    min-width: 0;
+  }
+
+  .thread-facts dt {
+    color: var(--color-text-muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.7rem;
+    text-transform: lowercase;
+  }
+
+  .thread-facts dd {
+    min-width: 0;
+    margin: 0;
+    color: var(--color-text);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.72rem;
+    overflow-wrap: anywhere;
+  }
+
   .thread-overview {
     border: 0;
     border-inline-start: 2px solid var(--color-border);
@@ -1143,5 +1215,20 @@
   .patch-hunk pre {
     font-size: 0.78rem;
     line-height: 1.45;
+  }
+
+  @media (max-width: 40rem) {
+    .thread-title-row {
+      display: block;
+    }
+
+    .thread-type {
+      display: block;
+      padding-top: 0.55rem;
+    }
+
+    .thread-facts {
+      grid-template-columns: 1fr;
+    }
   }
 }

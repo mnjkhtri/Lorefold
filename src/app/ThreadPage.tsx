@@ -2,12 +2,10 @@ import { Link, useLocation, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 import type { ParseWorkerResult } from "../parsing/worker-protocol";
-import { resultToThread } from "./result-to-thread";
 import { IndexedDbThreadRepository } from "../storage/thread-repository";
 import type { Thread } from "../models/thread";
 import type { StoredThread } from "../models/storage";
 import { RichContentBlocks } from "./RichContentBlocks";
-import { SafeTextDialog } from "./SafeTextDialog";
 import { PatchView } from "./PatchView";
 import { ThreadOverview } from "./ThreadOverview";
 import { safeLoreMessageHref } from "../security/safe-links";
@@ -23,11 +21,7 @@ export function ThreadPage() {
   const savedThread = typeof location.state === "object" && location.state !== null && "thread" in location.state
     ? (location.state as { thread?: Thread }).thread
     : undefined;
-  const routeRawRecords = typeof location.state === "object" && location.state !== null && "rawRecords" in location.state
-    ? (location.state as { rawRecords?: Uint8Array[] }).rawRecords
-    : undefined;
   const [stored, setStored] = useState<StoredThread | undefined>();
-  const [saveStatus, setSaveStatus] = useState<string | undefined>();
 
   useEffect(() => {
     if (result !== undefined || savedThread !== undefined || key === undefined) return undefined;
@@ -40,36 +34,24 @@ export function ThreadPage() {
   const isOfflineCopy = stored !== undefined || savedThread?.source.kind === "local-file";
   const parsedThread = result?.thread;
   const readerThread = localThread ?? parsedThread;
-  const rawRecords = routeRawRecords ?? stored?.rawRecords;
-
-  const save = async (): Promise<void> => {
-    const thread = readerThread ?? (result === undefined ? undefined : await resultToThread(result));
-    if (thread === undefined) return;
-    const now = new Date().toISOString();
-    const repository = new IndexedDbThreadRepository();
-    await repository.put({
-      thread,
-      rawRecords: result?.records.map((record) => new TextEncoder().encode(record.rawText)),
-      saved: true,
-      createdAt: now,
-      updatedAt: now,
-      lastOpenedAt: now,
-    });
-    await repository.close();
-    setSaveStatus("Saved locally");
-  };
 
   return (
     <section className="welcome-panel thread-reader" aria-labelledby="thread-title">
       <p><Link to="/">← activity</Link></p>
-      <h1 id="thread-title">{readerThread?.subject || "discussion"}</h1>
+      <div className="thread-title-row">
+        <h1 id="thread-title">{readerThread?.subject || "discussion"}</h1>
+        {readerThread !== undefined && <span className="thread-type">{threadType(readerThread.subject)}</span>}
+      </div>
       {isOfflineCopy && <p className="offline-notice" role="status">saved locally · available offline · network actions are unavailable</p>}
-      {(result !== undefined || readerThread !== undefined) && (
-        <p><button type="button" onClick={() => void save()}>Save thread</button>{saveStatus}</p>
-      )}
       {readerThread === undefined ? <p>This thread is not available in this browser session.</p> : (
         <>
-          <p className="thread-dek" aria-live="polite">{readerThread.chronologicalIds.length} messages · {readerThread.rootIds.length} root discussion{readerThread.rootIds.length === 1 ? "" : "s"}</p>
+          <dl className="thread-facts">
+            <div><dt>author</dt><dd>{readerThread.messages[readerThread.chronologicalIds[0] ?? ""]?.author.name || "unknown"}</dd></div>
+            <div><dt>date</dt><dd>{readerThread.messages[readerThread.chronologicalIds[0] ?? ""]?.timestamp.iso ?? readerThread.messages[readerThread.chronologicalIds[0] ?? ""]?.timestamp.raw ?? "unknown"}</dd></div>
+            <div><dt>messages</dt><dd>{readerThread.chronologicalIds.length}</dd></div>
+            <div><dt>patches</dt><dd>{Object.keys(readerThread.patches ?? {}).length}</dd></div>
+            <div><dt>lists</dt><dd>{[...new Set(Object.values(readerThread.messages).flatMap((message) => message.mailingLists.map((list) => list.displayName || list.id)))].join(" · ") || "unknown"}</dd></div>
+          </dl>
           <ThreadOverview
             messages={Object.fromEntries(Object.values(readerThread.messages).map((message) => [message.id, {
               id: message.id,
@@ -84,12 +66,10 @@ export function ThreadPage() {
             {readerThread.chronologicalIds.map((messageId, index) => {
               const message = readerThread.messages[messageId];
               if (message === undefined) return null;
-              const raw = rawRecords?.[message.sourceOrdinal] ?? result?.records[message.sourceOrdinal]?.rawText;
               return (
                 <SavedMessageArticle
                   key={message.id}
                   message={message}
-                  rawText={raw instanceof Uint8Array ? new TextDecoder().decode(raw) : raw}
                   patches={readerThread.patches}
                   ordinal={index + 1}
                   total={readerThread.chronologicalIds.length}
@@ -103,15 +83,20 @@ export function ThreadPage() {
   );
 }
 
+function threadType(subject: string): string {
+  const value = subject.toUpperCase();
+  if (value.includes("RFC")) return "rfc";
+  if (value.includes("PATCH")) return "patch";
+  return "discussion";
+}
+
 function SavedMessageArticle({
   message,
-  rawText,
   patches,
   ordinal,
   total,
 }: {
   message: Thread["messages"][string];
-  rawText?: string;
   patches?: Thread["patches"];
   ordinal: number;
   total: number;
@@ -136,20 +121,6 @@ function SavedMessageArticle({
         const patch = patches?.[patchId];
         return patch === undefined ? null : <PatchView key={patch.id} patch={patch} />;
       })}
-      <footer className="message-article__actions">
-        <SafeTextDialog
-          label="Metadata"
-          title="Message metadata"
-          text={`Message-ID: ${message.messageId ?? "unavailable"}\nSubject: ${message.subject}`}
-          emptyMessage="No metadata was retained."
-        />
-        <SafeTextDialog
-          label="Raw message"
-          title="Raw message"
-          text={rawText ?? "Raw message unavailable in this saved copy."}
-          emptyMessage="Raw message unavailable."
-        />
-      </footer>
     </article>
   );
 }

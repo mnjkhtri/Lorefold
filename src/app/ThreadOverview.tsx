@@ -36,7 +36,7 @@ export function ThreadOverview({ messages, rootIds, childrenByParent, collapsedI
 
   return (
     <nav className="thread-overview" aria-label="Thread overview">
-      <h2>Thread overview</h2>
+      <h2>Thread</h2>
       <ol>{rootIds.map((id) => renderNode(id, 0))}</ol>
     </nav>
   );

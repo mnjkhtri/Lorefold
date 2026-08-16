@@ -12,11 +12,6 @@ export function AppContent() {
         <header className="app-header">
           <div className="app-header__inner">
             <a className="app-brand" href="#/" aria-label="Lorefold home">Lorefold</a>
-            <span className="app-header__status"><a href="#/saved">Saved</a> · near-live kernel activity</span>
-            <details className="keyboard-help">
-              <summary>Keyboard help</summary>
-              <p>Use Tab to move between controls, Enter or Space to activate, and Escape to close dialogs.</p>
-            </details>
           </div>
         </header>
         <main className="app-main">

@@ -27,11 +27,10 @@ const record: ParsedWorkerRecord = {
 };
 
 describe("MessageArticle", () => {
-  it("renders metadata and text without HTML execution", () => {
+  it("renders message text without HTML execution", () => {
     const html = renderToStaticMarkup(<MessageArticle record={record} />);
     expect(html).toContain("A safe message");
     expect(html).toContain("Hello");
-    expect(html).toContain("Raw message");
     expect(html).not.toContain("dangerouslySetInnerHTML");
   });
 });

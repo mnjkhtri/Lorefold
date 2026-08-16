@@ -1,6 +1,5 @@
 import type { ParsedWorkerRecord } from "../parsing/worker-protocol";
 import { ContentBlocks } from "./ContentBlocks";
-import { SafeTextDialog } from "./SafeTextDialog";
 
 export function MessageArticle({ record }: { record: ParsedWorkerRecord }) {
   const author = record.headers.author.address === undefined
@@ -16,15 +15,6 @@ export function MessageArticle({ record }: { record: ParsedWorkerRecord }) {
         </p>
       </header>
       <ContentBlocks text={record.body.text} />
-      <footer className="message-article__actions">
-        <SafeTextDialog
-          label="Metadata"
-          title="Message metadata"
-          text={record.headers.rawHeaders.map((header) => `${header.originalKey}: ${header.value}`).join("\n")}
-          emptyMessage="No headers were retained."
-        />
-        <SafeTextDialog label="Raw message" title="Raw message" text={record.rawText} emptyMessage="Raw message unavailable." />
-      </footer>
     </article>
   );
 }

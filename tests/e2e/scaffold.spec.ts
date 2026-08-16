@@ -26,13 +26,11 @@ test("has no serious or critical accessibility violations", async ({ page }) => 
     .toEqual([]);
 });
 
-test("exposes keyboard help and keeps focus visible", async ({ page }) => {
+test("keeps primary activity controls keyboard reachable", async ({ page }) => {
   await page.goto("./");
-  await page.getByText("Keyboard help").click();
-  await expect(page.getByText(/Use Tab to move/)).toBeVisible();
-  const firstThread = page.locator(".activity-card__title").first();
-  await firstThread.focus();
-  await expect(firstThread).toBeFocused();
+  const search = page.getByRole("searchbox");
+  await search.focus();
+  await expect(search).toBeFocused();
 });
 
 test("stays readable and within the viewport on a narrow dark reduced-motion screen", async ({
@@ -48,7 +46,7 @@ test("stays readable and within the viewport on a narrow dark reduced-motion scr
     .toBeLessThanOrEqual(320);
   await expect(page.locator("body")).toHaveCSS(
     "background-color",
-    "rgb(17, 24, 28)",
+    "rgb(13, 17, 23)",
   );
 });
 
@@ -123,8 +121,7 @@ test("reopens a saved thread with raw content after networking is disabled", asy
   await page.getByRole("link", { name: /Offline saved discussion/ }).click();
   await expect(page.getByText("This message was read from IndexedDB.")).toBeVisible();
   await expect(page.getByText(/available offline/)).toBeVisible();
-  await page.getByRole("button", { name: "Raw message" }).click();
-  await expect(page.getByText("Raw offline message")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Raw message" })).toHaveCount(0);
 });
 
 test("renders the generated 500-message projection within the DOM budget", async ({ page }) => {
