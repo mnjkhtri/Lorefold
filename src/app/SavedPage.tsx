@@ -18,7 +18,7 @@ export function SavedPage() {
 
   return (
     <section className="welcome-panel" aria-labelledby="saved-title">
-      <p><Link to="/">Open another archive</Link></p>
+      <p><Link to="/">← activity</Link></p>
       <h1 id="saved-title">Saved threads</h1>
       {error !== undefined && <p role="alert">{error}</p>}
       {records.length === 0 ? <p>No saved or recent threads yet.</p> : (

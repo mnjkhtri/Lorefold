@@ -102,6 +102,277 @@
     font-size: var(--font-size-small);
   }
 
+  .app-header__status a {
+    color: var(--color-accent-strong);
+    text-decoration: underline;
+  }
+
+  .activity-page {
+    max-width: 64rem;
+    margin-inline: auto;
+  }
+
+  .page-intro {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-bottom: var(--space-5);
+  }
+
+  .page-intro h1 {
+    margin: 0.2rem 0 0;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    letter-spacing: -0.03em;
+  }
+
+  .eyebrow,
+  .sync-status,
+  .back-link {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-small);
+  }
+
+  .eyebrow {
+    margin: 0;
+    text-transform: lowercase;
+  }
+
+  .sync-status {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  .sync-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: #2d9d62;
+  }
+
+  .channel-nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-5);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .channel-nav__label {
+    margin-right: var(--space-2);
+    color: var(--color-text-muted);
+    font-size: var(--font-size-small);
+  }
+
+  .channel-nav a,
+  .filter-pills button,
+  .activity-card__tags span,
+  .activity-card__tags a {
+    padding: 0.25rem 0.55rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-surface);
+    color: var(--color-text-muted);
+    font-size: var(--font-size-small);
+    text-decoration: none;
+  }
+
+  .channel-nav a:hover,
+  .filter-pills button:hover,
+  .filter-pills button.is-selected {
+    border-color: var(--color-accent);
+    color: var(--color-accent-strong);
+  }
+
+  .activity-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+  }
+
+  .activity-controls input {
+    width: min(100%, 24rem);
+    min-height: 2.75rem;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-small);
+    background: var(--color-surface);
+    color: var(--color-text);
+  }
+
+  .open-list-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: var(--space-2);
+    max-width: 32rem;
+    margin-bottom: var(--space-5);
+  }
+
+  .open-list-form label {
+    width: 100%;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-small);
+  }
+
+  .open-list-form > div {
+    display: flex;
+    width: 100%;
+    gap: var(--space-2);
+  }
+
+  .open-list-form input {
+    flex: 1;
+    min-width: 0;
+    min-height: 2.75rem;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-small);
+    background: var(--color-surface);
+    color: var(--color-text);
+  }
+
+  .open-list-form button {
+    min-height: 2.75rem;
+    padding-inline: var(--space-4);
+    border: 1px solid var(--color-accent);
+    border-radius: var(--radius-small);
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+    cursor: pointer;
+  }
+
+  .open-list-form small { color: #a05020; }
+
+  .filter-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .filter-pills button {
+    min-height: 2.25rem;
+    cursor: pointer;
+  }
+
+  .activity-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
+  }
+
+  .activity-heading h2 {
+    margin: 0;
+    font-size: 1.05rem;
+  }
+
+  .activity-heading span,
+  .empty-state {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-small);
+  }
+
+  .activity-list {
+    display: grid;
+    gap: 1px;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-small);
+    background: var(--color-border);
+  }
+
+  .activity-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-4);
+    background: var(--color-surface);
+  }
+
+  .activity-card__main {
+    min-width: 0;
+  }
+
+  .activity-card__title {
+    max-width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-text);
+    font: inherit;
+    font-weight: 650;
+    text-align: start;
+    cursor: pointer;
+  }
+
+  .activity-card__title:hover {
+    color: var(--color-accent-strong);
+  }
+
+  .activity-card__meta,
+  .activity-card__tags {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .activity-card__meta {
+    margin: var(--space-2) 0 0;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-small);
+  }
+
+  .activity-card__meta span + span::before {
+    content: "·";
+    margin-right: var(--space-2);
+  }
+
+  .activity-card__tags {
+    justify-content: end;
+    flex-shrink: 0;
+  }
+
+  .activity-card__tags span,
+  .activity-card__tags a {
+    font-size: 0.75rem;
+  }
+
+  .activity-type--patch { color: var(--color-accent-strong) !important; }
+  .activity-type--rfc { color: #a05020 !important; }
+
+  .new-activity {
+    width: 100%;
+    margin-bottom: var(--space-4);
+    padding: var(--space-3);
+    border: 1px solid var(--color-accent);
+    border-radius: var(--radius-small);
+    background: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface));
+    color: var(--color-accent-strong);
+    text-align: start;
+    cursor: pointer;
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
   .keyboard-help {
     color: var(--color-text-muted);
     font-size: var(--font-size-small);
@@ -475,6 +746,14 @@
     .welcome-panel {
       padding: var(--space-5) var(--space-4);
     }
+
+    .page-intro,
+    .activity-card {
+      align-items: start;
+      flex-direction: column;
+    }
+
+    .activity-card__tags { justify-content: start; }
 
     .thread-navigation {
       gap: var(--space-1);

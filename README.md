@@ -20,10 +20,9 @@ npm run test:e2e
 npm run build
 ```
 
-the pages build fetches a small fresh lkml catalog through github actions.
+the pages build fetches a small fresh mailing-list catalog through github actions.
 saved threads live in indexeddb. there is no backend.
 
 browser lore fetching stays off because cors is not there. actions fetch the
-mboxes and publish same-origin data instead.
-
-local `.eml`, `.mbox`, and `.mbox.gz` files still work as a fallback.
+mboxes and publish same-origin data instead. the archive index is discovered at
+ingest time, so the frontend has no built-in mailing-list allowlist.

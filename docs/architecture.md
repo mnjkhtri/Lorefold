@@ -9,4 +9,5 @@ service worker keeps the shell around offline.
 local builds use `/`. pages builds use `/Lorefold/`.
 
 lore is fetched by actions because direct browser reads wait for real cors.
-local import is the fallback.
+list identifiers are discovered during ingestion; the browser has no list
+allowlist and no mail-file workflow.

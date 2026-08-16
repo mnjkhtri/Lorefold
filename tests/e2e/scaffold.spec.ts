@@ -3,7 +3,7 @@ import AxeBuilder from "@axe-core/playwright";
 
 test("renders the open page heading", async ({ page }) => {
   await page.goto("./");
-  await expect(page.getByRole("heading", { name: "linux kernel threads" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "latest activity" })).toBeVisible();
   await expect(page.locator('meta[http-equiv="Content-Security-Policy"]')).toHaveAttribute(
     "content",
     /default-src 'self'/u,
@@ -12,10 +12,10 @@ test("renders the open page heading", async ({ page }) => {
 
 test("opens an automatically generated LKML thread", async ({ page }) => {
   await page.goto("./");
-  const thread = page.locator(".latest-threads button").first();
+  const thread = page.locator(".activity-card__title").first();
   await expect(thread).toBeVisible();
   await thread.click();
-  await expect(page.getByRole("heading", { name: "Parsed thread" })).toBeVisible();
+  await expect(page.locator("#thread-title")).toBeVisible();
   await expect(page.locator(".message-article").first()).toBeVisible();
 });
 
@@ -27,12 +27,12 @@ test("has no serious or critical accessibility violations", async ({ page }) => 
 });
 
 test("exposes keyboard help and keeps focus visible", async ({ page }) => {
-  await page.goto("./#/import");
+  await page.goto("./");
   await page.getByText("Keyboard help").click();
   await expect(page.getByText(/Use Tab to move/)).toBeVisible();
-  const chooseButton = page.getByRole("button", { name: "Choose mail archive" });
-  await chooseButton.focus();
-  await expect(chooseButton).toBeFocused();
+  const firstThread = page.locator(".activity-card__title").first();
+  await firstThread.focus();
+  await expect(firstThread).toBeFocused();
 });
 
 test("stays readable and within the viewport on a narrow dark reduced-motion screen", async ({
@@ -42,7 +42,7 @@ test("stays readable and within the viewport on a narrow dark reduced-motion scr
   await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
   await page.goto("./");
 
-  await expect(page.getByRole("heading", { name: "linux kernel threads" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "latest activity" })).toBeVisible();
   await expect
     .poll(() => page.evaluate(() => document.documentElement.scrollWidth))
     .toBeLessThanOrEqual(320);

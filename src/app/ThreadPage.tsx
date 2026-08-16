@@ -60,15 +60,15 @@ export function ThreadPage() {
 
   return (
     <section className="welcome-panel" aria-labelledby="thread-title">
-      <p><Link to="/">Open another archive</Link></p>
-      <h1 id="thread-title">Parsed thread</h1>
-      {localThread !== undefined && <p className="offline-notice" role="status">This reader is available offline. Network actions are unavailable.</p>}
+      <p><Link to="/">← activity</Link></p>
+      <h1 id="thread-title">{readerThread?.subject || "discussion"}</h1>
+      {localThread !== undefined && <p className="offline-notice" role="status">saved locally · available offline · network actions are unavailable</p>}
       {(result !== undefined || readerThread !== undefined) && (
         <p><button type="button" onClick={() => void save()}>Save thread</button>{saveStatus}</p>
       )}
       {readerThread === undefined ? <p>This thread is not available in this browser session.</p> : (
         <>
-          <p aria-live="polite">{result === undefined ? "Saved thread reopened locally." : `${result.records.length} message records imported from the local file.`}</p>
+          <p aria-live="polite">{result === undefined ? "saved thread reopened locally." : `${readerThread.chronologicalIds.length} messages in this discussion.`}</p>
           <ThreadOverview
             messages={Object.fromEntries(Object.values(readerThread.messages).map((message) => [message.id, {
               id: message.id,
