@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdir, mkdtemp, readdir, unlink, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, readdir, unlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -16,6 +16,7 @@ const MANIFEST_URL = "https://lore.kernel.org/manifest.js.gz";
 const MAX_ACTIVE_LISTS = Number(process.env.LOREFOLD_MAX_LISTS ?? "16");
 const MAX_MESSAGES = Number(process.env.LOREFOLD_MAX_MESSAGES ?? "10000");
 const MAX_MESSAGES_PER_THREAD = Number(process.env.LOREFOLD_MAX_MESSAGES_PER_THREAD ?? "250");
+const MAX_RETAINED_THREADS = Number(process.env.LOREFOLD_MAX_RETAINED_THREADS ?? "10000");
 const MAX_RAW_MESSAGE_BYTES = 4 * 1024 * 1024;
 const FETCH_CONCURRENCY = 2;
 const OBJECT_CONCURRENCY = 8;
@@ -265,6 +266,17 @@ for (const [rootId, group] of grouped) {
 
 if (summaries.length === 0) throw new Error("no recent Lore threads were generated");
 summaries.sort((left, right) => Date.parse(right.updatedAt) - Date.parse(left.updatedAt));
+let previousCatalog: GeneratedCatalog | undefined;
+try {
+  previousCatalog = JSON.parse(await readFile("public/data/catalog.json", "utf8")) as GeneratedCatalog;
+} catch {
+  previousCatalog = undefined;
+}
+const retained = new Map((previousCatalog?.threads ?? []).map((thread) => [thread.id, thread]));
+for (const thread of summaries) retained.set(thread.id, thread);
+summaries.splice(0, summaries.length, ...[...retained.values()]
+  .sort((left, right) => Date.parse(right.updatedAt) - Date.parse(left.updatedAt))
+  .slice(0, MAX_RETAINED_THREADS));
 const catalog: GeneratedCatalog = {
   schemaVersion: 1,
   generatedAt,
@@ -279,8 +291,9 @@ const catalog: GeneratedCatalog = {
 const dataDirectory = "public/data";
 const threadDirectory = join(dataDirectory, "threads");
 await mkdir(threadDirectory, { recursive: true });
+const retainedKeys = new Set(summaries.map((thread) => thread.id));
 for (const filename of await readdir(threadDirectory)) {
-  if (filename.endsWith(".json")) await unlink(join(threadDirectory, filename));
+  if (filename.endsWith(".json") && !retainedKeys.has(filename.slice(0, -5))) await unlink(join(threadDirectory, filename));
 }
 await Promise.all(documents.map(({ key, document }) => writeFile(join(threadDirectory, `${key}.json`), JSON.stringify(document))));
 await writeFile(join(dataDirectory, "catalog.json"), JSON.stringify(catalog));
