@@ -1,18 +1,15 @@
 # Lorefold
 
-Lorefold is an unofficial, local-first reader for Linux development
-discussions. It is a static GitHub Pages PWA: there is no application backend.
-Import `.eml`, `.mbox`, or `.mbox.gz` archives locally; parsing runs in a
-dedicated worker and saved threads remain in browser storage.
+a tiny local-first mail thread reader.
 
-## Development
+run it:
 
 ```text
 npm install
 npm run dev
 ```
 
-The complete local quality gate is:
+checks:
 
 ```text
 npm run lint
@@ -23,15 +20,11 @@ npm run test:e2e
 npm run build
 ```
 
-End-to-end tests build and serve the production artifact. Chromium is required
-for those tests; install it with `npx playwright install chromium` when needed.
+drop in `.eml`, `.mbox`, or `.mbox.gz` files. parsing happens in a worker.
+saved threads live in indexeddb. there is no backend.
 
-Direct Lore loading is intentionally disabled until a real browser test from
-the deployed Pages origin proves readable CORS access. Lorefold is not
-affiliated with or endorsed by Lore or the Linux kernel community. Imported
-mail remains the responsibility of the user and may be copyrighted.
+lore fetching stays off because browser cors is not there. download the mbox,
+then open it here.
 
-More detail is in [the architecture notes](docs/architecture.md), [the
-security model](docs/security.md), [the data-access decision](docs/data-access.md),
-and [the fixture policy](docs/fixtures.md). The reproducible CORS evidence is
-in [the technical spike report](docs/spike-report.md).
+the pages workflow is ready, but github pages must be enabled for the repo
+before it can publish.
