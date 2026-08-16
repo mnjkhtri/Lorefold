@@ -335,13 +335,18 @@
   .overview-node { min-width: 0; padding-inline-start: min(calc(var(--thread-depth) * 0.8rem), 4rem); }
   .overview-node > a { overflow-wrap: anywhere; }
   .branch-count { color: var(--color-text-muted); }
-  .thread-messages { margin-top: 0.9rem; border-top: 1px solid var(--color-border); }
+  .thread-messages {
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 0.9rem;
+  }
   .message-article {
     padding: 1rem 0.9rem 1.25rem;
-    border-bottom: 1px solid var(--color-border);
-    background: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: 0.3rem;
+    background: var(--color-surface);
   }
-  .message-article--patch { background: color-mix(in srgb, var(--color-accent) 2.5%, var(--color-surface)); }
+  .message-article--patch { border-inline-start: 2px solid var(--color-accent); }
   .message-article h2, .message-article__author, .message-article__date, .message-article__source {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   }
