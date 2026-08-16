@@ -3,5 +3,6 @@
 the browser does not fetch lore directly. upstream responses did not grant
 usable cors from the real pages origin.
 
-paste a lore url, download the exact complete-thread mbox, and import it.
+github actions fetches a bounded set of current threads and publishes them as
+same-origin static data. arbitrary pasted urls still use the fallback.
 supported inputs are `.eml`, `.mbox`, `.mbox.gz`, and `.gz`.

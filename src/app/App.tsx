@@ -1,6 +1,7 @@
 import { HashRouter, Route, Routes } from "react-router-dom";
 
 import { OpenPage } from "./OpenPage";
+import { LatestPage } from "./LatestPage";
 import { ThreadPage } from "./ThreadPage";
 import { SavedPage } from "./SavedPage";
 import { UpdatePrompt } from "./UpdatePrompt";
@@ -20,10 +21,11 @@ export function AppContent() {
         </header>
         <main className="app-main">
           <Routes>
-            <Route path="/" element={<OpenPage />} />
+            <Route path="/" element={<LatestPage />} />
+            <Route path="/import" element={<OpenPage />} />
             <Route path="/thread/:key" element={<ThreadPage />} />
             <Route path="/saved" element={<SavedPage />} />
-            <Route path="*" element={<OpenPage />} />
+            <Route path="*" element={<LatestPage />} />
           </Routes>
         </main>
         <UpdatePrompt />

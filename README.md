@@ -1,6 +1,6 @@
 # Lorefold
 
-a tiny local-first mail thread reader.
+a tiny automatic lkml thread reader.
 
 run it:
 
@@ -20,11 +20,10 @@ npm run test:e2e
 npm run build
 ```
 
-drop in `.eml`, `.mbox`, or `.mbox.gz` files. parsing happens in a worker.
+the pages build fetches a small fresh lkml catalog through github actions.
 saved threads live in indexeddb. there is no backend.
 
-lore fetching stays off because browser cors is not there. download the mbox,
-then open it here.
+browser lore fetching stays off because cors is not there. actions fetch the
+mboxes and publish same-origin data instead.
 
-the pages workflow is ready, but github pages must be enabled for the repo
-before it can publish.
+local `.eml`, `.mbox`, and `.mbox.gz` files still work as a fallback.

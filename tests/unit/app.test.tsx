@@ -7,7 +7,7 @@ import { AppContent } from "../../src/app/App";
 describe("App", () => {
   it("renders the initial heading", () => {
     expect(renderToStaticMarkup(<MemoryRouter><AppContent /></MemoryRouter>)).toContain(
-      '<h1 id="open-title">Open a discussion</h1>',
+      '<h1 id="latest-title">linux kernel threads</h1>',
     );
   });
 });

@@ -3,11 +3,20 @@ import AxeBuilder from "@axe-core/playwright";
 
 test("renders the open page heading", async ({ page }) => {
   await page.goto("./");
-  await expect(page.getByRole("heading", { name: "Open a discussion" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "linux kernel threads" })).toBeVisible();
   await expect(page.locator('meta[http-equiv="Content-Security-Policy"]')).toHaveAttribute(
     "content",
     /default-src 'self'/u,
   );
+});
+
+test("opens an automatically generated LKML thread", async ({ page }) => {
+  await page.goto("./");
+  const thread = page.locator(".latest-threads button").first();
+  await expect(thread).toBeVisible();
+  await thread.click();
+  await expect(page.getByRole("heading", { name: "Parsed thread" })).toBeVisible();
+  await expect(page.locator(".message-article").first()).toBeVisible();
 });
 
 test("has no serious or critical accessibility violations", async ({ page }) => {
@@ -18,7 +27,7 @@ test("has no serious or critical accessibility violations", async ({ page }) => 
 });
 
 test("exposes keyboard help and keeps focus visible", async ({ page }) => {
-  await page.goto("./");
+  await page.goto("./#/import");
   await page.getByText("Keyboard help").click();
   await expect(page.getByText(/Use Tab to move/)).toBeVisible();
   const chooseButton = page.getByRole("button", { name: "Choose mail archive" });
@@ -33,7 +42,7 @@ test("stays readable and within the viewport on a narrow dark reduced-motion scr
   await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
   await page.goto("./");
 
-  await expect(page.getByRole("heading", { name: "Open a discussion" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "linux kernel threads" })).toBeVisible();
   await expect
     .poll(() => page.evaluate(() => document.documentElement.scrollWidth))
     .toBeLessThanOrEqual(320);

@@ -7,6 +7,8 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    - cron: "17 * * * *"
 
 permissions:
   contents: read
@@ -35,6 +37,8 @@ jobs:
         run: npm ci
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
+      - name: Generate automatic LKML catalog
+        run: npm run data:generate
       - name: Test Pages-base production artifact
         env:
           VITE_BASE_PATH: /Lorefold/

@@ -2,9 +2,11 @@
 
 static vite app. github pages. hash routes. no server.
 
-files go to a worker, the worker makes plain data, react renders it, indexeddb
-keeps saved threads, and the service worker keeps the shell around offline.
+github actions fetches a bounded lkml feed and mboxes, the build publishes
+same-origin json, react renders it, indexeddb keeps saved threads, and the
+service worker keeps the shell around offline.
 
 local builds use `/`. pages builds use `/Lorefold/`.
 
-lore is download-then-import for now. direct browser reads wait for real cors.
+lore is fetched by actions because direct browser reads wait for real cors.
+local import is the fallback.
