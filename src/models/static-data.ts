@@ -5,7 +5,7 @@ export interface GeneratedThreadRecord {
   subject: string;
   updatedAt: string;
   canonicalUrl: string;
-  channel: string;
+  channels: string[];
   author: string;
   latestParticipant: string;
   messageCount: number;
@@ -28,4 +28,5 @@ export interface GeneratedCatalog {
   generatedAt: string;
   channels: GeneratedChannel[];
   threads: GeneratedThreadRecord[];
+  warnings?: string[];
 }

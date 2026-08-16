@@ -4,18 +4,20 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { DEFAULT_PARSER_LIMITS } from "../src/parsing/limits";
 import { splitMbox } from "../src/parsing/mbox";
 import { parseThread } from "../src/parsing/thread-parser";
+import type { RawMessageRecord } from "../src/models/thread";
 
 const USER_AGENT = "Lorefold static catalog/0.1 (https://github.com/mnjkhtri/Lorefold)";
 const MAX_LISTS = Number(process.env.LOREFOLD_MAX_LISTS ?? "12");
 const MAX_THREADS_PER_LIST = Number(process.env.LOREFOLD_MAX_THREADS_PER_LIST ?? "2");
-const MAX_COMPRESSED_THREAD_BYTES = 10 * 1024 * 1024;
+const MAX_COMPRESSED_THREAD_BYTES = 1 * 1024 * 1024;
+const MAX_GENERATED_RECORDS = Number(process.env.LOREFOLD_MAX_GENERATED_RECORDS ?? "250");
 
 interface GeneratedThread {
   id: string;
   subject: string;
   updatedAt: string;
   canonicalUrl: string;
-  channel: string;
+  channels: string[];
   author: string;
   latestParticipant: string;
   messageCount: number;
@@ -99,16 +101,30 @@ function discoveredLists(index: string): DiscoveredList[] {
 const index = new TextDecoder().decode(await fetchBytes("https://lore.kernel.org/"));
 const lists = discoveredLists(index).slice(0, MAX_LISTS);
 const threads: GeneratedThread[] = [];
+const threadByUrl = new Map<string, GeneratedThread>();
+const warnings: string[] = [];
 for (const list of lists) {
   const feed = new TextDecoder().decode(await fetchBytes(`https://lore.kernel.org/${encodeURIComponent(list.id)}/new.atom`));
   const seen = new Set<string>();
   for (const entry of entries(feed)) {
-    if (threads.filter((item) => item.channel === list.id).length >= MAX_THREADS_PER_LIST) break;
+    if (threads.filter((item) => item.channels.includes(list.id)).length >= MAX_THREADS_PER_LIST) break;
     const canonicalUrl = entry.url.replace(/\/$/u, "");
     if (seen.has(canonicalUrl)) continue;
     seen.add(canonicalUrl);
-    const compressed = await fetchBytes(`${canonicalUrl}/t.mbox.gz`);
-    const records = splitMbox(new Uint8Array(gunzipSync(compressed)));
+    const existing = threadByUrl.get(canonicalUrl);
+    if (existing !== undefined) {
+      existing.channels.push(list.id);
+      continue;
+    }
+    let records: RawMessageRecord[];
+    try {
+      const compressed = await fetchBytes(`${canonicalUrl}/t.mbox.gz`);
+      records = splitMbox(new Uint8Array(gunzipSync(compressed)));
+      if (records.length > MAX_GENERATED_RECORDS) throw new Error(`thread contains ${records.length} messages`);
+    } catch (reason: unknown) {
+      warnings.push(`${list.id}: thread skipped (${reason instanceof Error ? reason.message : "unavailable"})`);
+      continue;
+    }
     if (records.length === 0) continue;
     const thread = await parseThread({
       request: {
@@ -125,12 +141,12 @@ for (const list of lists) {
     const first = thread.messages[thread.chronologicalIds[0] ?? ""];
     const latest = thread.messages[thread.chronologicalIds.at(-1) ?? ""];
     const classification = classify(subject, list.id);
-    threads.push({
+    const generated: GeneratedThread = {
       id: thread.id,
       subject,
       updatedAt: entry.updatedAt,
       canonicalUrl,
-      channel: list.id,
+      channels: [list.id],
       author: authorName(first),
       latestParticipant: authorName(latest),
       messageCount: thread.chronologicalIds.length,
@@ -138,7 +154,9 @@ for (const list of lists) {
       ...classification,
       thread,
       rawRecords: records.map((record) => Buffer.from(record.bytes).toString("base64")),
-    });
+    };
+    threads.push(generated);
+    threadByUrl.set(canonicalUrl, generated);
   }
 }
 
@@ -150,8 +168,9 @@ await writeFile("public/data/lkml.json", JSON.stringify({
   channels: lists.map((list) => ({
     id: list.id,
     label: list.label,
-    threadCount: threads.filter((thread) => thread.channel === list.id).length,
+    threadCount: threads.filter((thread) => thread.channels.includes(list.id)).length,
   })),
   threads,
+  ...(warnings.length === 0 ? {} : { warnings }),
 }, null, 2));
 console.log(`generated ${threads.length} threads across ${lists.length} discovered lists`);

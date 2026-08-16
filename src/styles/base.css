@@ -287,16 +287,17 @@
     gap: 1px;
     overflow: hidden;
     border: 1px solid var(--color-border);
-    border-radius: var(--radius-small);
+    border-radius: 0.2rem;
     background: var(--color-border);
   }
 
   .activity-card {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
     justify-content: space-between;
     gap: var(--space-4);
-    padding: var(--space-4);
+    padding: 0.7rem 0.85rem;
     background: var(--color-surface);
   }
 
@@ -312,6 +313,7 @@
     color: var(--color-text);
     font: inherit;
     font-weight: 650;
+    letter-spacing: -0.01em;
     text-align: start;
     cursor: pointer;
   }
@@ -329,7 +331,7 @@
   }
 
   .activity-card__meta {
-    margin: var(--space-2) 0 0;
+    margin: 0.3rem 0 0;
     color: var(--color-text-muted);
     font-size: var(--font-size-small);
   }
@@ -342,6 +344,7 @@
   .activity-card__tags {
     justify-content: end;
     flex-shrink: 0;
+    align-self: center;
   }
 
   .activity-card__tags span,
@@ -409,6 +412,10 @@
     border-radius: var(--radius-large);
     background: var(--color-surface);
     box-shadow: 0 0.5rem 2rem rgb(24 33 38 / 8%);
+  }
+
+  .thread-reader {
+    max-width: 62rem;
   }
 
   .welcome-panel h1 {
@@ -517,14 +524,35 @@
     font-size: var(--font-size-small);
   }
 
+  .message-article__author {
+    color: var(--color-text);
+  }
+
+  .author-address {
+    color: var(--color-text-muted);
+    font-weight: 400;
+  }
+
+  .thread-dek {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-small);
+  }
+
   .message-content p {
     white-space: pre-wrap;
   }
 
   .rich-content-blocks p,
   .rich-content-blocks pre {
-    white-space: pre-wrap;
     overflow-wrap: anywhere;
+  }
+
+  .rich-content-blocks p {
+    white-space: normal;
+  }
+
+  .rich-content-blocks pre {
+    white-space: pre-wrap;
   }
 
   .content-disclosure {
@@ -747,10 +775,13 @@
       padding: var(--space-5) var(--space-4);
     }
 
-    .page-intro,
-    .activity-card {
+    .page-intro {
       align-items: start;
       flex-direction: column;
+    }
+
+    .activity-card {
+      grid-template-columns: 1fr;
     }
 
     .activity-card__tags { justify-content: start; }

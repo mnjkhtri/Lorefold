@@ -37,6 +37,7 @@ export function ThreadPage() {
   }, [key, result, savedThread]);
 
   const localThread = savedThread ?? stored?.thread;
+  const isOfflineCopy = stored !== undefined || savedThread?.source.kind === "local-file";
   const parsedThread = result?.thread;
   const readerThread = localThread ?? parsedThread;
   const rawRecords = routeRawRecords ?? stored?.rawRecords;
@@ -59,16 +60,16 @@ export function ThreadPage() {
   };
 
   return (
-    <section className="welcome-panel" aria-labelledby="thread-title">
+    <section className="welcome-panel thread-reader" aria-labelledby="thread-title">
       <p><Link to="/">← activity</Link></p>
       <h1 id="thread-title">{readerThread?.subject || "discussion"}</h1>
-      {localThread !== undefined && <p className="offline-notice" role="status">saved locally · available offline · network actions are unavailable</p>}
+      {isOfflineCopy && <p className="offline-notice" role="status">saved locally · available offline · network actions are unavailable</p>}
       {(result !== undefined || readerThread !== undefined) && (
         <p><button type="button" onClick={() => void save()}>Save thread</button>{saveStatus}</p>
       )}
       {readerThread === undefined ? <p>This thread is not available in this browser session.</p> : (
         <>
-          <p aria-live="polite">{result === undefined ? "saved thread reopened locally." : `${readerThread.chronologicalIds.length} messages in this discussion.`}</p>
+          <p className="thread-dek" aria-live="polite">{readerThread.chronologicalIds.length} messages · {readerThread.rootIds.length} root discussion{readerThread.rootIds.length === 1 ? "" : "s"}</p>
           <ThreadOverview
             messages={Object.fromEntries(Object.values(readerThread.messages).map((message) => [message.id, {
               id: message.id,
@@ -80,7 +81,7 @@ export function ThreadPage() {
             childrenByParent={readerThread.childrenByParent}
           />
           <div className="thread-messages">
-            {readerThread.chronologicalIds.map((messageId) => {
+            {readerThread.chronologicalIds.map((messageId, index) => {
               const message = readerThread.messages[messageId];
               if (message === undefined) return null;
               const raw = rawRecords?.[message.sourceOrdinal] ?? result?.records[message.sourceOrdinal]?.rawText;
@@ -90,6 +91,8 @@ export function ThreadPage() {
                   message={message}
                   rawText={raw instanceof Uint8Array ? new TextDecoder().decode(raw) : raw}
                   patches={readerThread.patches}
+                  ordinal={index + 1}
+                  total={readerThread.chronologicalIds.length}
                 />
               );
             })}
@@ -104,29 +107,31 @@ function SavedMessageArticle({
   message,
   rawText,
   patches,
+  ordinal,
+  total,
 }: {
   message: Thread["messages"][string];
   rawText?: string;
   patches?: Thread["patches"];
+  ordinal: number;
+  total: number;
 }) {
-  const author = message.author.address === undefined
-    ? message.author.name || "Unknown author"
-    : `${message.author.name} <${message.author.address}>`;
   return (
-    <article className="message-article" id={`message-${encodeURIComponent(message.id)}`}>
+    <article className={`message-article${message.patchIds.length > 0 ? " message-article--patch" : ""}`} id={`message-${encodeURIComponent(message.id)}`}>
       <header>
-        <p className="message-article__author">{author}</p>
+        <p className="message-article__author"><strong>{message.author.name || "Unknown author"}</strong></p>
         <h2>{message.subject || "(no subject)"}</h2>
         <p className="message-article__date">
+          message {ordinal} of {total} · {" "}
           {message.timestamp.valid ? message.timestamp.iso : message.timestamp.raw ?? "Unknown date"}
         </p>
         {message.messageId !== undefined && (
           <p className="message-article__source">
-            <a href={safeLoreMessageHref(message.messageId)} rel="noopener noreferrer">Canonical Lore message</a>
+            <a href={safeLoreMessageHref(message.messageId)} rel="noopener noreferrer">view on lore</a>
           </p>
         )}
       </header>
-      <RichContentBlocks blocks={message.blocks} />
+      <RichContentBlocks blocks={message.blocks.filter((block) => block.kind !== "patch")} />
       {message.patchIds.map((patchId) => {
         const patch = patches?.[patchId];
         return patch === undefined ? null : <PatchView key={patch.id} patch={patch} />;

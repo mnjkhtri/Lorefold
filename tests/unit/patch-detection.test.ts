@@ -23,6 +23,11 @@ describe("detectPatches", () => {
     ]);
   });
 
+  it("keeps a multi-file patch series in one review unit", () => {
+    const secondFile = "diff --git a/src/other.ts b/src/other.ts\n--- a/src/other.ts\n+++ b/src/other.ts\n@@ -1,1 +1,1 @@\n-old\n+new";
+    expect(detectPatches(`${patch}\n${secondFile}`).patches).toHaveLength(1);
+  });
+
   it("rejects quoted and incomplete diff-looking prose", () => {
     expect(detectPatches("> diff --git a/a b/a\n> --- a/a\n> +++ b/a\n> @@ -1 +1 @@")).toEqual({
       preamble: "> diff --git a/a b/a\n> --- a/a\n> +++ b/a\n> @@ -1 +1 @@",

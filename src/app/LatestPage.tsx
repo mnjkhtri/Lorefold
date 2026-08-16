@@ -23,7 +23,7 @@ export function ThreadCard({ record }: { record: GeneratedThreadRecord }) {
         </button>
         <p className="activity-card__meta">
           <span>{record.author}</span>
-          <span>{record.channel}</span>
+          <span>{record.channels.join(" · ")}</span>
           <span>{record.replyCount} {record.replyCount === 1 ? "reply" : "replies"}</span>
           <span>{relativeTime(record.updatedAt)}</span>
         </p>
@@ -98,9 +98,9 @@ function OpenListForm() {
 export function filteredThreads(catalog: GeneratedCatalog, query: string, filter: string, channel?: string) {
   const normalized = query.trim().toLowerCase();
   return catalog.threads
-    .filter((record) => channel === undefined || record.channel === channel)
+    .filter((record) => channel === undefined || record.channels.includes(channel))
     .filter((record) => filter === "all" || record.activityType === filter)
-    .filter((record) => normalized.length === 0 || [record.subject, record.author, record.latestParticipant, record.channel, ...record.topics]
+    .filter((record) => normalized.length === 0 || [record.subject, record.author, record.latestParticipant, ...record.channels, ...record.topics]
       .join(" ").toLowerCase().includes(normalized))
     .sort((left, right) => Date.parse(right.updatedAt) - Date.parse(left.updatedAt));
 }

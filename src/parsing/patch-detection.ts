@@ -35,17 +35,18 @@ function bodyPatch(candidate: PatchCandidate): DetectedPatch[] {
   const starts = gitStarts.length > 0
     ? gitStarts
     : lines.flatMap((line, index) => OLD_FILE_PATTERN.test(line) ? [index] : []);
-  const patches: DetectedPatch[] = [];
+  if (starts.length === 0) return [];
+  const region = lines.slice(starts[0]);
+  return hasCoherentSyntax(region)
+    ? [{ rawText: region.join("\n"), source: candidate.source }]
+    : [];
+}
 
-  for (let index = 0; index < starts.length; index += 1) {
-    const start = starts[index];
-    const end = starts[index + 1] ?? lines.length;
-    const region = lines.slice(start, end);
-    if (hasCoherentSyntax(region)) {
-      patches.push({ rawText: region.join("\n"), source: candidate.source });
-    }
-  }
-  return patches;
+function removeDiffstat(preamble: string): string {
+  const lines = preamble.split(/\r?\n/u);
+  const separator = lines.findIndex((line, index) => line.trim() === "---" &&
+    lines.slice(index + 1).some((candidate) => /^\s*\S.+\s+\|\s+\d+\s+[+-]+\s*$/u.test(candidate)));
+  return separator < 0 ? preamble : lines.slice(0, separator).join("\n").trimEnd();
 }
 
 export function detectPatches(
@@ -59,7 +60,7 @@ export function detectPatches(
     : body.indexOf(bodyPatches[0].rawText.split("\n")[0]);
 
   return {
-    preamble: firstBodyStart < 0 ? body : body.slice(0, firstBodyStart).trimEnd(),
+    preamble: removeDiffstat(firstBodyStart < 0 ? body : body.slice(0, firstBodyStart).trimEnd()),
     patches: [...bodyPatches, ...attachments.flatMap(bodyPatch)],
   };
 }
