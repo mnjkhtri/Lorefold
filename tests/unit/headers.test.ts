@@ -51,6 +51,21 @@ describe("normalizeHeaders", () => {
     expect(result.rawHeaders[0].originalKey).toBe("List-Id");
   });
 
+  it("preserves recipient metadata for the reader", () => {
+    const result = normalizeHeaders({
+      ...baseMessage,
+      sender: { name: "Sender", address: "sender@example.test" },
+      replyTo: [{ name: "Replies", address: "replies@example.test" }],
+      to: [{ name: "To person", address: "to@example.test" }],
+      cc: [{ name: "", address: "cc@example.test" }],
+    });
+
+    expect(result.sender).toEqual({ name: "Sender", address: "sender@example.test" });
+    expect(result.replyTo).toEqual([{ name: "Replies", address: "replies@example.test" }]);
+    expect(result.to).toEqual([{ name: "To person", address: "to@example.test" }]);
+    expect(result.cc).toEqual([{ name: "", address: "cc@example.test" }]);
+  });
+
   it("emits diagnostics and bounds malformed values", () => {
     const result = normalizeHeaders(
       {

@@ -25,6 +25,10 @@ export interface Message {
   references: MessageId[];
   missingAncestorIds: MessageId[];
   author: Author;
+  sender?: Author;
+  replyTo?: Author[];
+  to?: Author[];
+  cc?: Author[];
   timestamp: ParsedTimestamp;
   subject: string;
   mailingLists: MailingList[];

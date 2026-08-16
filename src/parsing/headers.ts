@@ -8,6 +8,10 @@ const MESSAGE_ID_PATTERN = /<([^<>\s]+)>/gu;
 export interface NormalizedHeaders {
   rawHeaders: MimeHeader[];
   author: Author;
+  sender?: Author;
+  replyTo: Author[];
+  to: Author[];
+  cc: Author[];
   timestamp: ParsedTimestamp;
   subject: string;
   messageId?: MessageId;
@@ -26,6 +30,15 @@ function firstAddress(address: MimeAddress | undefined): Author {
   }
   const groupMember = address.group?.[0];
   return groupMember === undefined ? { name: address.name } : firstAddress(groupMember);
+}
+
+function flattenAddresses(addresses: MimeAddress[]): Author[] {
+  return addresses.flatMap((address) => {
+    if (address.address !== undefined || address.group === undefined) {
+      return [{ name: address.name, ...(address.address === undefined ? {} : { address: address.address }) }];
+    }
+    return flattenAddresses(address.group);
+  });
 }
 
 function normalizeMessageId(value: string | undefined): MessageId | undefined {
@@ -117,6 +130,10 @@ export function normalizeHeaders(
   return {
     rawHeaders: message.headers.map((header) => ({ ...header })),
     author: firstAddress(message.from),
+    ...(message.sender === undefined ? {} : { sender: firstAddress(message.sender) }),
+    replyTo: flattenAddresses(message.replyTo),
+    to: flattenAddresses(message.to),
+    cc: flattenAddresses(message.cc),
     timestamp: parseTimestamp(message.date, diagnostics),
     subject: message.subject ?? "",
     messageId: normalizeMessageId(message.messageId),
