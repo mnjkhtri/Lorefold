@@ -11,10 +11,8 @@ export type MessageKey = string;
 export type ThreadKey = string;
 
 export interface SourceDescriptor {
-  kind: "lore-direct" | "local-file" | "static-generated";
-  requestedLoreUrl?: string;
+  kind: "static-generated";
   canonicalThreadUrl?: string;
-  importedFilename?: string;
   fetchedAt?: string;
   contentDigest: string;
 }
@@ -75,17 +73,6 @@ export interface ParserLimits {
   maxHeaderBytes: number;
   maxReferences: number;
   maxBodyBytes: number;
-}
-
-export interface ThreadSource {
-  loadThread(
-    request: ThreadRequest,
-    signal: AbortSignal,
-  ): Promise<RawThreadEnvelope>;
-}
-
-export interface ThreadParser {
-  parse(input: RawThreadEnvelope, limits: ParserLimits): Promise<Thread>;
 }
 
 export type { MessageId, ParseDiagnostic, PatchId, PatchSeries } from "./patch";

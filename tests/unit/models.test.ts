@@ -41,7 +41,7 @@ describe("core models", () => {
     const thread: Thread = {
       schemaVersion: 1,
       id: "thread-1",
-      source: { kind: "local-file", contentDigest: "sha256:fixture" },
+      source: { kind: "static-generated", contentDigest: "sha256:fixture" },
       subject: "A test thread",
       messages: {
         "message-1": {

@@ -6,7 +6,7 @@ export function UpdatePrompt() {
   const refreshing = useRef(false);
 
   useEffect(() => {
-    if (!("serviceWorker" in navigator)) return undefined;
+    if (import.meta.env.DEV || !("serviceWorker" in navigator)) return undefined;
 
     let registration: ServiceWorkerRegistration | undefined;
     const register = async () => {

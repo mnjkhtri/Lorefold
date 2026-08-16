@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { reconstructThread, type ReconstructionRecord } from "../../src/parsing/reconstruction";
 import type { Message } from "../../src/models/thread";
 
-const source = { kind: "local-file" as const, contentDigest: "sha256:thread" };
+const source = { kind: "static-generated" as const, contentDigest: "sha256:thread" };
 
 function message(id: string, date: string, parent?: string, ordinal = 0, subject = "Thread"): Message {
   return {

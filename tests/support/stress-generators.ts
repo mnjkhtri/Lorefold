@@ -21,7 +21,7 @@ export function makeStressEnvelope(count = 500, depth = 100): RawThreadEnvelope 
   });
   return {
     request: {
-      source: { kind: "local-file", importedFilename: "stress.mbox", contentDigest: "stress-fixture" },
+      source: { kind: "static-generated", contentDigest: "stress-fixture" },
     },
     records,
   };

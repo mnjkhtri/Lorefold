@@ -17,7 +17,7 @@ export default defineConfig({
       manifest: {
         name: "Lorefold",
         short_name: "Lorefold",
-        description: "A local-first reader for Linux development discussions.",
+        description: "A live, readable view of Linux development discussions.",
         start_url: "./",
         scope: "./",
         display: "standalone",
@@ -31,7 +31,14 @@ export default defineConfig({
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg}"],
         navigateFallback: "./index.html",
-        runtimeCaching: [],
+        runtimeCaching: [{
+          urlPattern: /\/data\/.*\.json$/u,
+          handler: "StaleWhileRevalidate",
+          options: {
+            cacheName: "lorefold-data",
+            expiration: { maxEntries: 96, maxAgeSeconds: 7 * 24 * 60 * 60 },
+          },
+        }],
       },
     }),
   ],

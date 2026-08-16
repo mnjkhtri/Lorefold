@@ -2,6 +2,7 @@ import type { Thread } from "./thread";
 
 export interface GeneratedThreadRecord {
   id: string;
+  dataPath: string;
   subject: string;
   updatedAt: string;
   canonicalUrl: string;
@@ -13,13 +14,10 @@ export interface GeneratedThreadRecord {
   activityType: "patch" | "rfc" | "discussion";
   patchVersion?: string;
   topics: string[];
-  thread: Thread;
-  rawRecords: string[];
 }
 
 export interface GeneratedChannel {
   id: string;
-  label: string;
   threadCount: number;
 }
 
@@ -29,4 +27,13 @@ export interface GeneratedCatalog {
   channels: GeneratedChannel[];
   threads: GeneratedThreadRecord[];
   warnings?: string[];
+}
+
+export interface GeneratedThreadDocument {
+  schemaVersion: 1;
+  generatedAt: string;
+  id: string;
+  canonicalUrl: string;
+  channels: string[];
+  thread: Thread;
 }

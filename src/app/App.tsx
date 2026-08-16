@@ -3,7 +3,6 @@ import { HashRouter, Route, Routes } from "react-router-dom";
 import { LatestPage } from "./LatestPage";
 import { ChannelPage } from "./ChannelPage";
 import { ThreadPage } from "./ThreadPage";
-import { SavedPage } from "./SavedPage";
 import { UpdatePrompt } from "./UpdatePrompt";
 
 export function AppContent() {
@@ -19,7 +18,6 @@ export function AppContent() {
             <Route path="/" element={<LatestPage />} />
             <Route path="/channel/:channel" element={<ChannelPage />} />
             <Route path="/thread/:key" element={<ThreadPage />} />
-            <Route path="/saved" element={<SavedPage />} />
             <Route path="*" element={<LatestPage />} />
           </Routes>
         </main>

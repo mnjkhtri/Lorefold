@@ -1,18 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 
-import type { GeneratedCatalog } from "../models/static-data";
+import type { GeneratedCatalog, GeneratedThreadDocument } from "../models/static-data";
 
-const CATALOG_URL = `${import.meta.env.BASE_URL}data/lkml.json`;
-const CATALOG_CACHE_KEY = "lorefold.catalog";
-
-function cachedCatalog(): GeneratedCatalog | undefined {
-  try {
-    const value = localStorage.getItem(CATALOG_CACHE_KEY);
-    return value === null ? undefined : JSON.parse(value) as GeneratedCatalog;
-  } catch {
-    return undefined;
-  }
-}
+const DATA_URL = `${import.meta.env.BASE_URL}data/`;
+const CATALOG_URL = `${DATA_URL}catalog.json`;
 
 export async function fetchCatalog(): Promise<GeneratedCatalog> {
   const response = await fetch(CATALOG_URL, { cache: "no-store" });
@@ -20,8 +11,15 @@ export async function fetchCatalog(): Promise<GeneratedCatalog> {
   return response.json() as Promise<GeneratedCatalog>;
 }
 
+export async function fetchThreadDocument(dataPath: string): Promise<GeneratedThreadDocument> {
+  if (!/^threads\/[a-f0-9]{24}\.json$/u.test(dataPath)) throw new Error("invalid thread data path");
+  const response = await fetch(`${DATA_URL}${dataPath}`, { cache: "no-store" });
+  if (!response.ok) throw new Error(`thread unavailable (${response.status})`);
+  return response.json() as Promise<GeneratedThreadDocument>;
+}
+
 export function useCatalog() {
-  const [catalog, setCatalog] = useState<GeneratedCatalog | undefined>(cachedCatalog);
+  const [catalog, setCatalog] = useState<GeneratedCatalog>();
   const [error, setError] = useState<string>();
   const [newCatalog, setNewCatalog] = useState<GeneratedCatalog>();
   const [refreshing, setRefreshing] = useState(true);
@@ -30,7 +28,6 @@ export function useCatalog() {
     setRefreshing(true);
     try {
       const next = await fetchCatalog();
-      localStorage.setItem(CATALOG_CACHE_KEY, JSON.stringify(next));
       setError(undefined);
       if (initial) setCatalog(next);
       else if (catalog?.generatedAt !== next.generatedAt) setNewCatalog(next);

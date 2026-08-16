@@ -15,7 +15,7 @@ export function ChannelPage() {
   return (
     <section className="activity-page" aria-labelledby="channel-title">
       <div className="page-intro">
-        <div><Link className="back-link" to="/">← all activity</Link><h1 id="channel-title">{selected?.label ?? channel}</h1></div>
+        <div><Link className="back-link" to="/">← all activity</Link><h1 id="channel-title">{selected?.id ?? channel}</h1></div>
         {catalog !== undefined && <SyncStatus catalog={catalog} />}
       </div>
       {newCatalog !== undefined && <button className="new-activity" type="button" onClick={applyNewCatalog}>new activity available · show it</button>}

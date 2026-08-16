@@ -1,78 +1,68 @@
-import { Link, useLocation, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
 
-import type { ParseWorkerResult } from "../parsing/worker-protocol";
-import { IndexedDbThreadRepository } from "../storage/thread-repository";
+import type { GeneratedThreadDocument } from "../models/static-data";
 import type { Thread } from "../models/thread";
-import type { StoredThread } from "../models/storage";
-import { RichContentBlocks } from "./RichContentBlocks";
-import { PatchView } from "./PatchView";
-import { ThreadOverview } from "./ThreadOverview";
 import { safeLoreMessageHref } from "../security/safe-links";
-
-function isParseResult(value: unknown): value is ParseWorkerResult {
-  return typeof value === "object" && value !== null && "records" in value && Array.isArray(value.records);
-}
+import { PatchView } from "./PatchView";
+import { RichContentBlocks } from "./RichContentBlocks";
+import { ThreadOverview } from "./ThreadOverview";
+import { fetchThreadDocument } from "./catalog";
 
 export function ThreadPage() {
-  const location = useLocation();
   const { key } = useParams<{ key: string }>();
-  const result = isParseResult(location.state) ? location.state : undefined;
-  const savedThread = typeof location.state === "object" && location.state !== null && "thread" in location.state
-    ? (location.state as { thread?: Thread }).thread
-    : undefined;
-  const [stored, setStored] = useState<StoredThread | undefined>();
+  const [document, setDocument] = useState<GeneratedThreadDocument>();
+  const [error, setError] = useState<string>();
 
   useEffect(() => {
-    if (result !== undefined || savedThread !== undefined || key === undefined) return undefined;
-    const repository = new IndexedDbThreadRepository();
-    void repository.get(decodeURIComponent(key)).then(setStored).catch(() => undefined);
-    return () => { void repository.close(); };
-  }, [key, result, savedThread]);
+    if (key === undefined || !/^[a-f0-9]{24}$/u.test(key)) {
+      setError("invalid thread link");
+      return undefined;
+    }
+    let active = true;
+    void fetchThreadDocument(`threads/${key}.json`)
+      .then((next) => { if (active) setDocument(next); })
+      .catch((reason: unknown) => { if (active) setError(reason instanceof Error ? reason.message : "thread unavailable"); });
+    return () => { active = false; };
+  }, [key]);
 
-  const localThread = savedThread ?? stored?.thread;
-  const isOfflineCopy = stored !== undefined || savedThread?.source.kind === "local-file";
-  const parsedThread = result?.thread;
-  const readerThread = localThread ?? parsedThread;
-
+  const thread = document?.thread;
   return (
-    <section className="welcome-panel thread-reader" aria-labelledby="thread-title">
+    <section className="thread-reader" aria-labelledby="thread-title">
       <p><Link to="/">← activity</Link></p>
-      <div className="thread-title-row">
-        <h1 id="thread-title">{readerThread?.subject || "discussion"}</h1>
-        {readerThread !== undefined && <span className="thread-type">{threadType(readerThread.subject)}</span>}
-      </div>
-      {isOfflineCopy && <p className="offline-notice" role="status">saved locally · available offline · network actions are unavailable</p>}
-      {readerThread === undefined ? <p>This thread is not available in this browser session.</p> : (
+      {error !== undefined && <p role="alert">{error}</p>}
+      {thread === undefined && error === undefined && <p role="status">loading discussion…</p>}
+      {thread !== undefined && (
         <>
+          <div className="thread-title-row">
+            <h1 id="thread-title">{thread.subject || "discussion"}</h1>
+            <span className="thread-type">{threadType(thread.subject)}</span>
+          </div>
           <dl className="thread-facts">
-            <div><dt>author</dt><dd>{readerThread.messages[readerThread.chronologicalIds[0] ?? ""]?.author.name || "unknown"}</dd></div>
-            <div><dt>date</dt><dd>{readerThread.messages[readerThread.chronologicalIds[0] ?? ""]?.timestamp.iso ?? readerThread.messages[readerThread.chronologicalIds[0] ?? ""]?.timestamp.raw ?? "unknown"}</dd></div>
-            <div><dt>messages</dt><dd>{readerThread.chronologicalIds.length}</dd></div>
-            <div><dt>patches</dt><dd>{Object.keys(readerThread.patches ?? {}).length}</dd></div>
-            <div><dt>lists</dt><dd>{[...new Set(Object.values(readerThread.messages).flatMap((message) => message.mailingLists.map((list) => list.displayName || list.id)))].join(" · ") || "unknown"}</dd></div>
+            <div><dt>author</dt><dd>{firstMessage(thread)?.author.name || "unknown"}</dd></div>
+            <div><dt>date</dt><dd>{readableDate(firstMessage(thread)?.timestamp.iso ?? firstMessage(thread)?.timestamp.raw)}</dd></div>
+            <div><dt>messages</dt><dd>{thread.chronologicalIds.length}</dd></div>
+            <div><dt>patches</dt><dd>{Object.keys(thread.patches ?? {}).length}</dd></div>
+            <div><dt>lists</dt><dd>{document?.channels.join(" · ") || "unknown"}</dd></div>
           </dl>
           <ThreadOverview
-            messages={Object.fromEntries(Object.values(readerThread.messages).map((message) => [message.id, {
+            messages={Object.fromEntries(Object.values(thread.messages).map((message) => [message.id, {
               id: message.id,
-              author: message.author.name || "Unknown author",
               subject: message.subject,
-              ...(message.parentId === undefined ? {} : { parentId: message.parentId }),
             }]))}
-            rootIds={readerThread.rootIds}
-            childrenByParent={readerThread.childrenByParent}
+            rootIds={thread.rootIds}
+            childrenByParent={thread.childrenByParent}
           />
           <div className="thread-messages">
-            {readerThread.chronologicalIds.map((messageId, index) => {
-              const message = readerThread.messages[messageId];
-              if (message === undefined) return null;
-              return (
-                <SavedMessageArticle
+            {thread.chronologicalIds.map((messageId, index) => {
+              const message = thread.messages[messageId];
+              return message === undefined ? null : (
+                <MessageArticle
                   key={message.id}
                   message={message}
-                  patches={readerThread.patches}
+                  patches={thread.patches}
                   ordinal={index + 1}
-                  total={readerThread.chronologicalIds.length}
+                  total={thread.chronologicalIds.length}
                 />
               );
             })}
@@ -83,6 +73,10 @@ export function ThreadPage() {
   );
 }
 
+function firstMessage(thread: Thread) {
+  return thread.messages[thread.chronologicalIds[0] ?? ""];
+}
+
 function threadType(subject: string): string {
   const value = subject.toUpperCase();
   if (value.includes("RFC")) return "rfc";
@@ -90,7 +84,15 @@ function threadType(subject: string): string {
   return "discussion";
 }
 
-function SavedMessageArticle({
+function readableDate(value: string | undefined): string {
+  if (value === undefined) return "unknown";
+  const date = new Date(value);
+  return Number.isNaN(date.valueOf())
+    ? value
+    : date.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+}
+
+function MessageArticle({
   message,
   patches,
   ordinal,
@@ -106,15 +108,8 @@ function SavedMessageArticle({
       <header>
         <p className="message-article__author"><strong>{message.author.name || "Unknown author"}</strong></p>
         <h2>{message.subject || "(no subject)"}</h2>
-        <p className="message-article__date">
-          message {ordinal} of {total} · {" "}
-          {message.timestamp.valid ? message.timestamp.iso : message.timestamp.raw ?? "Unknown date"}
-        </p>
-        {message.messageId !== undefined && (
-          <p className="message-article__source">
-            <a href={safeLoreMessageHref(message.messageId)} rel="noopener noreferrer">view on lore</a>
-          </p>
-        )}
+        <p className="message-article__date">message {ordinal} of {total} · {readableDate(message.timestamp.valid ? message.timestamp.iso : message.timestamp.raw)}</p>
+        {message.messageId !== undefined && <p className="message-article__source"><a href={safeLoreMessageHref(message.messageId)} rel="noopener noreferrer">view on lore</a></p>}
       </header>
       <RichContentBlocks blocks={message.blocks.filter((block) => block.kind !== "patch")} />
       {message.patchIds.map((patchId) => {

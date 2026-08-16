@@ -5,20 +5,13 @@ import type { GeneratedCatalog, GeneratedThreadRecord } from "../models/static-d
 import { safeLoreThreadHref } from "../security/safe-links";
 import { useCatalog } from "./catalog";
 
-function decodeBase64(value: string): Uint8Array {
-  const binary = atob(value);
-  return Uint8Array.from(binary, (character) => character.charCodeAt(0));
-}
-
 export function ThreadCard({ record }: { record: GeneratedThreadRecord }) {
   const navigate = useNavigate();
   const href = safeLoreThreadHref(record.canonicalUrl);
   return (
     <article className="activity-card">
       <div className="activity-card__main">
-        <button type="button" className="activity-card__title" onClick={() => navigate(`/thread/${encodeURIComponent(record.id)}`, {
-          state: { thread: record.thread, rawRecords: record.rawRecords.map(decodeBase64) },
-        })}>
+        <button type="button" className="activity-card__title" onClick={() => navigate(`/thread/${record.id}`)}>
           {record.subject || "(no subject)"}
         </button>
         <p className="activity-card__meta">
@@ -93,8 +86,8 @@ function OpenListForm() {
   };
   return (
     <form className="open-list-form" onSubmit={submit}>
-      <label htmlFor="list-id">open another list</label>
-      <div><input id="list-id" value={value} onChange={(event) => setValue(event.target.value)} placeholder="list identifier" /><button type="submit">open</button></div>
+      <label className="visually-hidden" htmlFor="list-id">open mailing list by identifier</label>
+      <div><input id="list-id" value={value} onChange={(event) => setValue(event.target.value)} placeholder="open list by name" /><button type="submit">open</button></div>
       {error !== undefined && <small role="alert">{error}</small>}
     </form>
   );
@@ -122,10 +115,7 @@ export function LatestPage() {
   return (
     <section className="activity-page" aria-labelledby="latest-title">
       <div className="page-intro">
-        <div>
-          <p className="eyebrow">kernel development, in motion</p>
-          <h1 id="latest-title">latest activity</h1>
-        </div>
+        <h1 id="latest-title">latest activity</h1>
         {activeCatalog !== undefined && <SyncStatus catalog={activeCatalog} refreshing={refreshing} />}
       </div>
       {newCatalog !== undefined && (
@@ -140,7 +130,7 @@ export function LatestPage() {
               <span className="visually-hidden">Mailing list</span>
               <select value={selectedChannel} onChange={(event) => setSelectedChannel(event.target.value)}>
                 <option value="all">all lists</option>
-                {activeCatalog.channels.map((channel) => <option key={channel.id} value={channel.id}>{channel.label}</option>)}
+                {activeCatalog.channels.map((channel) => <option key={channel.id} value={channel.id}>{channel.id}</option>)}
               </select>
             </label>
             <label className="index-search">
@@ -150,17 +140,17 @@ export function LatestPage() {
             <div className="filter-pills" aria-label="Activity type">
               {(["all", "patch", "rfc", "discussion"] as const).map((value) => <button key={value} type="button" className={filter === value ? "is-selected" : ""} onClick={() => setFilter(value)}>{value === "all" ? "messages" : value === "patch" ? "patchsets" : value}</button>)}
             </div>
+            <OpenListForm />
           </div>
-          <OpenListForm />
           <div className="activity-heading"><h2>recent activity</h2><span>{threads.length} shown</span></div>
           <div className="activity-list">
             <table className="activity-table">
               <thead><tr><th scope="col">subject</th><th scope="col">author</th><th scope="col">date</th><th scope="col">messages</th><th scope="col">type</th></tr></thead>
               <tbody>{threads.map((record) => {
                 const href = safeLoreThreadHref(record.canonicalUrl);
-                const labels = [...new Set([...record.channels, ...record.topics])].slice(0, 4);
+                const labels = [...new Set(record.channels)].slice(0, 4);
                 return <tr className="activity-card" key={record.id}>
-                  <td className="activity-subject"><button type="button" className="activity-card__title" onClick={() => navigate(`/thread/${encodeURIComponent(record.id)}`, { state: { thread: record.thread, rawRecords: record.rawRecords.map(decodeBase64) } })}>{record.subject || "(no subject)"}</button><div className="activity-labels">{labels.map((label) => record.channels.includes(label) ? <Link key={label} to={`/channel/${encodeURIComponent(label)}`}>{label}</Link> : <span key={label}>{label}</span>)}</div>{href !== undefined && <a className="activity-source" href={href} rel="noopener noreferrer">lore</a>}</td>
+                  <td className="activity-subject"><button type="button" className="activity-card__title" onClick={() => navigate(`/thread/${record.id}`)}>{record.subject || "(no subject)"}</button><div className="activity-labels">{labels.map((label) => <Link key={label} to={`/channel/${encodeURIComponent(label)}`}>{label}</Link>)}</div>{href !== undefined && <a className="activity-source" href={href} rel="noopener noreferrer">lore</a>}</td>
                   <td>{record.author}</td><td>{formatDate(record.updatedAt)}<small>{relativeTime(record.updatedAt)}</small></td><td>{record.messageCount}</td><td><span className={`activity-type activity-type--${record.activityType}`}>{record.activityType}</span></td>
                 </tr>;
               })}</tbody>

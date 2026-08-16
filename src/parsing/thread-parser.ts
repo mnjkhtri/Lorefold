@@ -10,7 +10,7 @@ import { parseQuotes } from "./quotes";
 import { parseSignatureAndCode } from "./signature-code";
 import { parsePatchSeries } from "./trailers-series";
 import { reconstructThread, type ReconstructionRecord } from "./reconstruction";
-import type { ParserLimits, RawThreadEnvelope, ThreadParser } from "../models/thread";
+import type { ParserLimits, RawThreadEnvelope } from "../models/thread";
 
 export class ThreadParseError extends Error {
   public readonly code = "thread-parse-error";
@@ -118,5 +118,3 @@ export async function parseThread(
     throw new ThreadParseError("Thread could not be parsed.", { cause: error });
   }
 }
-
-export const threadParser: ThreadParser = { parse: parseThread };

@@ -17,7 +17,7 @@ describe("parseThread", () => {
     const raw = (value: string): Uint8Array => new TextEncoder().encode(value);
     const input: RawThreadEnvelope = {
       request: {
-        source: { kind: "local-file", importedFilename: "thread.mbox", contentDigest: "sha256:test" },
+        source: { kind: "static-generated", contentDigest: "sha256:test" },
       },
       records: [
         {
@@ -48,7 +48,7 @@ describe("parseThread", () => {
     const result = await parseThread({
       request: {
         requestedMessageId: "root@example.test",
-        source: { kind: "local-file", importedFilename: "thread.eml", contentDigest: "sha256:test" },
+        source: { kind: "static-generated", contentDigest: "sha256:test" },
       },
       records: [{
         sourceOrdinal: 0,
@@ -59,7 +59,7 @@ describe("parseThread", () => {
     await expect(parseThread({
       request: {
         requestedMessageId: "missing@example.test",
-        source: { kind: "local-file", contentDigest: "sha256:test" },
+        source: { kind: "static-generated", contentDigest: "sha256:test" },
       },
       records: [{
         sourceOrdinal: 0,

@@ -1,6 +1,6 @@
 # Lorefold
 
-a tiny automatic lkml thread reader.
+a tiny live reader for linux mailing lists.
 
 run it:
 
@@ -20,9 +20,5 @@ npm run test:e2e
 npm run build
 ```
 
-the pages build fetches a small fresh mailing-list catalog through github actions.
-saved threads live in indexeddb. there is no backend.
-
-browser lore fetching stays off because cors is not there. actions fetch the
-mboxes and publish same-origin data instead. the archive index is discovered at
-ingest time, so the frontend has no built-in mailing-list allowlist.
+github actions discovers lore archives, shallow-fetches recent messages, and
+publishes static thread data. no backend. no uploads. no list allowlist.

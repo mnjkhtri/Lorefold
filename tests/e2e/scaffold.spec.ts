@@ -1,187 +1,48 @@
-import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { expect, test } from "@playwright/test";
 
-test("renders the open page heading", async ({ page }) => {
+test("renders current mailing-list activity", async ({ page }) => {
   await page.goto("./");
   await expect(page.getByRole("heading", { name: "latest activity" })).toBeVisible();
-  await expect(page.locator('meta[http-equiv="Content-Security-Policy"]')).toHaveAttribute(
-    "content",
-    /default-src 'self'/u,
-  );
+  await expect(page.locator(".activity-card__title").first()).toBeVisible();
+  await expect(page.locator('meta[http-equiv="Content-Security-Policy"]')).toHaveAttribute("content", /default-src 'self'/u);
 });
 
-test("opens an automatically generated LKML thread", async ({ page }) => {
+test("opens and directly reloads a generated thread", async ({ page }) => {
   await page.goto("./");
-  const thread = page.locator(".activity-card__title").first();
-  await expect(thread).toBeVisible();
-  await thread.click();
+  await page.locator(".activity-card__title").first().click();
+  await expect(page.locator("#thread-title")).toBeVisible();
+  await expect(page.locator(".message-article").first()).toBeVisible();
+  await page.reload();
   await expect(page.locator("#thread-title")).toBeVisible();
   await expect(page.locator(".message-article").first()).toBeVisible();
 });
 
 test("has no serious or critical accessibility violations", async ({ page }) => {
   await page.goto("./");
+  await expect(page.locator(".activity-card__title").first()).toBeVisible();
   const results = await new AxeBuilder({ page }).analyze();
-  expect(results.violations.filter((violation) => violation.impact === "serious" || violation.impact === "critical"))
-    .toEqual([]);
+  expect(results.violations.filter((violation) => violation.impact === "serious" || violation.impact === "critical")).toEqual([]);
 });
 
-test("keeps primary activity controls keyboard reachable", async ({ page }) => {
+test("keeps primary controls keyboard reachable", async ({ page }) => {
   await page.goto("./");
   const search = page.getByRole("searchbox");
   await search.focus();
   await expect(search).toBeFocused();
 });
 
-test("stays readable and within the viewport on a narrow dark reduced-motion screen", async ({
-  page,
-}) => {
+test("stays readable on a narrow dark reduced-motion screen", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 640 });
   await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
   await page.goto("./");
-
   await expect(page.getByRole("heading", { name: "latest activity" })).toBeVisible();
-  await expect
-    .poll(() => page.evaluate(() => document.documentElement.scrollWidth))
-    .toBeLessThanOrEqual(320);
-  await expect(page.locator("body")).toHaveCSS(
-    "background-color",
-    "rgb(13, 17, 23)",
-  );
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(11, 15, 20)");
 });
 
 test("keeps the document within an Android-sized viewport", async ({ page }) => {
   await page.setViewportSize({ width: 393, height: 852 });
   await page.goto("./");
-  await expect
-    .poll(() => page.evaluate(() => document.documentElement.scrollWidth))
-    .toBeLessThanOrEqual(393);
-});
-
-test("reopens a saved thread with raw content after networking is disabled", async ({ page, context }) => {
-  await page.goto("./#/saved");
-  await page.evaluate(async () => {
-    await new Promise<void>((resolve, reject) => {
-      const request = indexedDB.open("lorefold", 1);
-      request.onupgradeneeded = () => {
-        const store = request.result.createObjectStore("threads", { keyPath: "thread.id" });
-        store.createIndex("saved", "saved");
-        store.createIndex("lastOpenedAt", "lastOpenedAt");
-      };
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => {
-        const transaction = request.result.transaction("threads", "readwrite");
-        transaction.objectStore("threads").put({
-          thread: {
-            schemaVersion: 1,
-            id: "offline-thread",
-            source: { kind: "local-file", importedFilename: "offline.eml", contentDigest: "test" },
-            subject: "Offline saved discussion",
-            messages: {
-              "message-1": {
-                id: "message-1",
-                messageId: "<offline@example.test>",
-                references: [],
-                missingAncestorIds: [],
-                author: { name: "Offline Author", address: "author@example.test" },
-                timestamp: { valid: false, raw: "not a date" },
-                subject: "Offline saved discussion",
-                mailingLists: [],
-                blocks: [{ kind: "paragraph", text: "This message was read from IndexedDB." }],
-                patchIds: [],
-                attachmentMetadata: [],
-                sourceOrdinal: 0,
-                diagnostics: [],
-              },
-            },
-            rootIds: ["message-1"],
-            childrenByParent: {},
-            chronologicalIds: ["message-1"],
-            patchSeries: [],
-            diagnostics: [],
-          },
-          rawRecords: [new TextEncoder().encode("Subject: Offline saved discussion\\n\\nRaw offline message")],
-          saved: true,
-          createdAt: "2026-01-01T00:00:00.000Z",
-          updatedAt: "2026-01-01T00:00:00.000Z",
-          lastOpenedAt: "2026-01-01T00:00:00.000Z",
-        });
-        transaction.oncomplete = () => resolve();
-        transaction.onerror = () => reject(transaction.error);
-      };
-    });
-  });
-
-  await page.evaluate(async () => {
-    if ("serviceWorker" in navigator) await navigator.serviceWorker.ready;
-  });
-  await page.reload();
-  await context.setOffline(true);
-  await page.reload();
-  await page.getByRole("link", { name: /Offline saved discussion/ }).click();
-  await expect(page.getByText("This message was read from IndexedDB.")).toBeVisible();
-  await expect(page.getByText(/available offline/)).toBeVisible();
-  await expect(page.getByRole("button", { name: "Raw message" })).toHaveCount(0);
-});
-
-test("renders the generated 500-message projection within the DOM budget", async ({ page }) => {
-  await page.goto("./#/saved");
-  await page.evaluate(async () => {
-    await new Promise<void>((resolve, reject) => {
-      const request = indexedDB.open("lorefold", 1);
-      request.onupgradeneeded = () => {
-        const store = request.result.createObjectStore("threads", { keyPath: "thread.id" });
-        store.createIndex("saved", "saved");
-        store.createIndex("lastOpenedAt", "lastOpenedAt");
-      };
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => {
-        const messages = Object.fromEntries(Array.from({ length: 500 }, (_, index) => {
-          const id = `generated-${index}`;
-          return [id, {
-            id,
-            messageId: `<${id}@example.test>`,
-            references: [],
-            missingAncestorIds: [],
-            author: { name: `Author ${index}` },
-            timestamp: { valid: false },
-            subject: `Generated message ${index}`,
-            mailingLists: [],
-            blocks: [{ kind: "paragraph", text: `Generated body ${index}.` }],
-            patchIds: [],
-            attachmentMetadata: [],
-            sourceOrdinal: index,
-            diagnostics: [],
-          }];
-        }));
-        const transaction = request.result.transaction("threads", "readwrite");
-        transaction.objectStore("threads").put({
-          thread: {
-            schemaVersion: 1,
-            id: "generated-stress-thread",
-            source: { kind: "local-file", importedFilename: "stress.eml", contentDigest: "stress" },
-            subject: "Generated stress thread",
-            messages,
-            rootIds: Object.keys(messages),
-            childrenByParent: {},
-            chronologicalIds: Object.keys(messages),
-            patchSeries: [],
-            diagnostics: [],
-          },
-          saved: true,
-          createdAt: "2026-01-01T00:00:00.000Z",
-          updatedAt: "2026-01-01T00:00:00.000Z",
-          lastOpenedAt: "2026-01-01T00:00:00.000Z",
-        });
-        transaction.oncomplete = () => resolve();
-        transaction.onerror = () => reject(transaction.error);
-      };
-    });
-  });
-  const started = Date.now();
-  await page.reload();
-  await page.getByRole("link", { name: /Generated stress thread/ }).click();
-  await expect(page.locator(".message-article")).toHaveCount(500);
-  expect(Date.now() - started).toBeLessThan(1000);
-  expect(await page.evaluate(() => document.documentElement.outerHTML.length)).toBeLessThan(50 * 1024 * 1024);
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(393);
 });
