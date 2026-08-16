@@ -292,13 +292,14 @@
     border: 1px solid var(--color-border);
     background: var(--color-surface);
   }
-  .message-metadata summary {
+  .message-metadata h2 {
+    margin: 0;
     padding: 0.45rem 0.6rem;
     color: var(--color-text-muted);
-    cursor: pointer;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-size: 0.68rem;
-    list-style-position: inside;
+    font-weight: 600;
+    text-transform: lowercase;
   }
   .message-metadata dl {
     display: grid;

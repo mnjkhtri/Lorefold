@@ -39,14 +39,14 @@ export function ThreadPage() {
             <h1 id="thread-title">{thread.subject || "discussion"}</h1>
             <span className="thread-type">{threadType(thread.subject)}</span>
           </div>
-          <dl className="thread-facts">
-            <div><dt>author</dt><dd>{initialMessage?.author.name || "unknown"}</dd></div>
-            <div><dt>date</dt><dd>{readableDate(initialMessage?.timestamp.iso ?? initialMessage?.timestamp.raw)}</dd></div>
-            <div><dt>messages</dt><dd>{thread.chronologicalIds.length}</dd></div>
-            <div><dt>patches</dt><dd>{Object.keys(thread.patches ?? {}).length}</dd></div>
-            <div><dt>lists</dt><dd>{document?.channels.join(" · ") || "unknown"}</dd></div>
-          </dl>
-          {initialMessage !== undefined && <MessageMetadata message={initialMessage} />}
+          {initialMessage !== undefined && (
+            <MessageMetadata
+              message={initialMessage}
+              channels={document?.channels ?? []}
+              messageCount={thread.chronologicalIds.length}
+              patchCount={Object.keys(thread.patches ?? {}).length}
+            />
+          )}
           <ThreadOverview
             messages={Object.fromEntries(Object.values(thread.messages).map((message) => [message.id, {
               id: message.id,
@@ -75,28 +75,37 @@ export function ThreadPage() {
   );
 }
 
-function MessageMetadata({ message }: { message: Thread["messages"][string] }) {
+function MessageMetadata({
+  message,
+  channels,
+  messageCount,
+  patchCount,
+}: {
+  message: Thread["messages"][string];
+  channels: string[];
+  messageCount: number;
+  patchCount: number;
+}) {
   const rows: Array<[string, string]> = [
-    ["from", formatAddress(message.author)],
-    ...(message.sender === undefined ? [] : [["sender", formatAddress(message.sender)] as [string, string]]),
+    ["author", formatAddress(message.author)],
+    ["date", readableDate(message.timestamp.iso ?? message.timestamp.raw)],
+    ["messages", String(messageCount)],
+    ["patches", String(patchCount)],
+    ["lists", channels.length > 0 ? channels.join(" · ") : "unknown"],
     ...(message.to === undefined || message.to.length === 0 ? [] : [["to", formatAddresses(message.to)] as [string, string]]),
     ...(message.cc === undefined || message.cc.length === 0 ? [] : [["cc", formatAddresses(message.cc)] as [string, string]]),
     ...(message.replyTo === undefined || message.replyTo.length === 0 ? [] : [["reply-to", formatAddresses(message.replyTo)] as [string, string]]),
     ...(message.messageId === undefined ? [] : [["message-id", `<${message.messageId}>`] as [string, string]]),
     ...(message.declaredParentMessageId === undefined ? [] : [["in-reply-to", `<${message.declaredParentMessageId}>`] as [string, string]]),
     ...(message.references.length === 0 ? [] : [["references", message.references.map((value) => `<${value}>`).join(" ")] as [string, string]]),
-    ...(message.mailingLists.length === 0 ? [] : [["list-id", message.mailingLists.map((list) => list.id).join(" · ")] as [string, string]]),
-    ...(message.mailingLists.some((list) => list.address !== undefined)
-      ? [["list-post", message.mailingLists.flatMap((list) => list.address === undefined ? [] : [list.address]).join(" · ")] as [string, string]]
-      : []),
   ];
   return (
-    <details className="message-metadata">
-      <summary>message metadata</summary>
+    <section className="message-metadata" aria-label="message metadata">
+      <h2>metadata</h2>
       <dl>
         {rows.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
       </dl>
-    </details>
+    </section>
   );
 }
 
