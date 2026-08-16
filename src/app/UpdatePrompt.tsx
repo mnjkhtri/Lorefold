@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
 export function UpdatePrompt() {
-  const [offlineReady, setOfflineReady] = useState(false);
   const [needRefresh, setNeedRefresh] = useState(false);
   const refreshing = useRef(false);
 
@@ -22,7 +21,6 @@ export function UpdatePrompt() {
         worker.addEventListener("statechange", () => {
           if (worker.state !== "installed") return;
           if (navigator.serviceWorker.controller) setNeedRefresh(true);
-          else setOfflineReady(true);
         });
       });
     };
@@ -36,28 +34,20 @@ export function UpdatePrompt() {
     return () => navigator.serviceWorker.removeEventListener("controllerchange", onControllerChange);
   }, []);
 
-  if (!offlineReady && !needRefresh) return null;
+  if (!needRefresh) return null;
   return (
     <aside className="update-prompt" role="status">
-      {offlineReady && <span>Offline shell ready.</span>}
-      {needRefresh && (
-        <>
-          <span>New version available.</span>
-          <button
-            type="button"
-            onClick={() => {
-              refreshing.current = true;
-              void navigator.serviceWorker.getRegistration().then((registration) => {
-                registration?.waiting?.postMessage({ type: "SKIP_WAITING" });
-              });
-            }}
-          >
-            Update
-          </button>
-        </>
-      )}
-      <button type="button" onClick={() => { setOfflineReady(false); setNeedRefresh(false); }}>
-        Dismiss
+      <span>New version available.</span>
+      <button
+        type="button"
+        onClick={() => {
+          refreshing.current = true;
+          void navigator.serviceWorker.getRegistration().then((registration) => {
+            registration?.waiting?.postMessage({ type: "SKIP_WAITING" });
+          });
+        }}
+      >
+        Update
       </button>
     </aside>
   );
