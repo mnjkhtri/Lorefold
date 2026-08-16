@@ -355,6 +355,126 @@
   .activity-type--patch { color: var(--color-accent-strong) !important; }
   .activity-type--rfc { color: #a05020 !important; }
 
+  .index-toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-block: var(--space-4);
+  }
+
+  .list-select select,
+  .index-search input {
+    min-height: 2.3rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.15rem;
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.78rem;
+  }
+
+  .list-select select {
+    min-width: 10rem;
+    padding-inline: 0.5rem 1.6rem;
+  }
+
+  .index-search input {
+    width: min(20rem, 100%);
+    padding-inline: 0.55rem;
+  }
+
+  .activity-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+
+  .activity-table th,
+  .activity-table td {
+    padding: 0.45rem 0.7rem;
+    border-bottom: 1px solid var(--color-border);
+    text-align: start;
+    vertical-align: top;
+  }
+
+  .activity-table th {
+    background: var(--color-surface-raised);
+    color: var(--color-text);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+
+  .activity-table th:nth-child(1) { width: 50%; }
+  .activity-table th:nth-child(2) { width: 19%; }
+  .activity-table th:nth-child(3) { width: 13%; }
+  .activity-table th:nth-child(4) { width: 9%; }
+  .activity-table th:nth-child(5) { width: 9%; }
+
+  .activity-table tr.activity-card {
+    display: table-row;
+    min-height: 0;
+    padding: 0;
+  }
+
+  .activity-table tbody tr:hover {
+    background: color-mix(in srgb, var(--color-accent) 5%, var(--color-surface));
+  }
+
+  .activity-table td {
+    color: var(--color-text-muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.76rem;
+  }
+
+  .activity-table td small {
+    display: block;
+    margin-top: 0.15rem;
+    color: var(--color-text-muted);
+    font-size: 0.68rem;
+  }
+
+  .activity-table .activity-subject {
+    position: relative;
+  }
+
+  .activity-table .activity-card__title {
+    display: block;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--color-text);
+    font-size: 0.78rem;
+  }
+
+  .activity-labels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin-top: 0.22rem;
+  }
+
+  .activity-labels a,
+  .activity-labels span,
+  .activity-source {
+    padding: 0.12rem 0.3rem;
+    border-radius: 0.12rem;
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.64rem;
+    text-decoration: none;
+  }
+
+  .activity-source {
+    margin-top: 0.25rem;
+    background: transparent;
+    color: var(--color-accent-strong);
+    text-decoration: underline;
+  }
+
   .new-activity {
     width: 100%;
     margin-bottom: var(--space-4);
@@ -784,6 +904,26 @@
       grid-template-columns: 1fr;
     }
 
+    .activity-table {
+      table-layout: auto;
+    }
+
+    .activity-table th:nth-child(2),
+    .activity-table td:nth-child(2),
+    .activity-table th:nth-child(4),
+    .activity-table td:nth-child(4) {
+      display: none;
+    }
+
+    .activity-table th,
+    .activity-table td {
+      padding-inline: 0.45rem;
+    }
+
+    .activity-table .activity-card__title {
+      white-space: normal;
+    }
+
     .activity-card__tags { justify-content: start; }
 
     .thread-navigation {
@@ -801,5 +941,207 @@
     .app-main {
       padding-block: var(--space-4);
     }
+  }
+
+  /* technical index / document reader surface */
+  .activity-page {
+    max-width: 78rem;
+  }
+
+  .page-intro {
+    margin-bottom: var(--space-4);
+  }
+
+  .page-intro h1 {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: clamp(1.7rem, 3vw, 2.2rem);
+    font-weight: 650;
+    letter-spacing: -0.06em;
+  }
+
+  .eyebrow {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.75rem;
+  }
+
+  .channel-nav {
+    gap: 0.2rem 0.8rem;
+    padding-bottom: var(--space-3);
+  }
+
+  .channel-nav__label {
+    margin-right: 0.2rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+
+  .channel-nav a,
+  .filter-pills button,
+  .activity-card__tags span,
+  .activity-card__tags a {
+    border: 0;
+    border-radius: 0.15rem;
+    background: transparent;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.72rem;
+  }
+
+  .channel-nav a,
+  .filter-pills button.is-selected {
+    color: var(--color-accent-strong);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2rem;
+  }
+
+  .activity-controls {
+    align-items: center;
+    margin-bottom: var(--space-4);
+  }
+
+  .activity-controls input,
+  .open-list-form input {
+    min-height: 2.35rem;
+    border-radius: 0.15rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.8rem;
+  }
+
+  .filter-pills {
+    gap: 0.15rem;
+  }
+
+  .filter-pills button {
+    min-height: 2.25rem;
+    padding-inline: 0.45rem;
+  }
+
+  .activity-heading {
+    margin-bottom: var(--space-2);
+  }
+
+  .activity-heading h2,
+  .activity-heading span {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+
+  .activity-list {
+    border-inline: 0;
+    border-radius: 0;
+  }
+
+  .activity-card {
+    min-height: 4.1rem;
+    padding: 0.58rem 0.7rem;
+  }
+
+  .activity-card__title {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.82rem;
+    font-weight: 550;
+    letter-spacing: -0.02em;
+  }
+
+  .activity-card__meta,
+  .activity-card__tags {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.7rem;
+  }
+
+  .activity-card__meta {
+    margin-top: 0.2rem;
+  }
+
+  .activity-card__tags {
+    gap: 0.35rem;
+  }
+
+  .activity-card__tags span,
+  .activity-card__tags a {
+    padding: 0.15rem 0.3rem;
+    color: var(--color-accent-strong);
+  }
+
+  .activity-type--rfc { color: #a05020 !important; }
+
+  .thread-reader {
+    max-width: 72rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .thread-reader > h1 {
+    max-width: 58rem;
+    margin-top: var(--space-3);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: clamp(1.35rem, 2.5vw, 2rem);
+    letter-spacing: -0.04em;
+  }
+
+  .thread-overview {
+    border: 0;
+    border-inline-start: 2px solid var(--color-border);
+    border-radius: 0;
+    background: transparent;
+    padding-block: 0;
+  }
+
+  .thread-messages {
+    gap: 1px;
+  }
+
+  .message-article {
+    border: 0;
+    border-block: 1px solid var(--color-border);
+    border-radius: 0;
+    background: var(--color-surface);
+    padding: clamp(1rem, 2vw, 1.6rem);
+  }
+
+  .message-article h2,
+  .message-article__author,
+  .message-article__date,
+  .message-article__source {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+
+  .message-article h2 {
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+
+  .message-article__author {
+    font-size: 0.78rem;
+  }
+
+  .message-article__date,
+  .message-article__source {
+    font-size: 0.72rem;
+  }
+
+  .rich-content-blocks {
+    max-width: 66rem;
+  }
+
+  .rich-content-blocks p {
+    max-width: 72ch;
+    line-height: 1.65;
+  }
+
+  .patch-view {
+    margin-top: var(--space-4);
+    border-top: 1px solid var(--color-border);
+    padding-top: var(--space-3);
+  }
+
+  .patch-file,
+  .patch-hunk {
+    border-radius: 0.15rem;
+  }
+
+  .patch-hunk pre {
+    font-size: 0.78rem;
+    line-height: 1.45;
   }
 }

@@ -102,6 +102,7 @@ const index = new TextDecoder().decode(await fetchBytes("https://lore.kernel.org
 const lists = discoveredLists(index).slice(0, MAX_LISTS);
 const threads: GeneratedThread[] = [];
 const threadByUrl = new Map<string, GeneratedThread>();
+const threadById = new Map<string, GeneratedThread>();
 const warnings: string[] = [];
 for (const list of lists) {
   const feed = new TextDecoder().decode(await fetchBytes(`https://lore.kernel.org/${encodeURIComponent(list.id)}/new.atom`));
@@ -142,6 +143,12 @@ for (const list of lists) {
       records,
     }, DEFAULT_PARSER_LIMITS);
     const subject = entry.subject || thread.subject;
+    const existingThread = threadById.get(thread.id);
+    if (existingThread !== undefined) {
+      existingThread.channels.push(list.id);
+      threadByUrl.set(canonicalUrl, existingThread);
+      continue;
+    }
     const first = thread.messages[thread.chronologicalIds[0] ?? ""];
     const latest = thread.messages[thread.chronologicalIds.at(-1) ?? ""];
     const classification = classify(subject, list.id);
@@ -161,6 +168,7 @@ for (const list of lists) {
     };
     threads.push(generated);
     threadByUrl.set(canonicalUrl, generated);
+    threadById.set(thread.id, generated);
   }
 }
 
